@@ -1,0 +1,78 @@
+* {
+    border: none;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+
+.main {
+    max-width: 1100px;
+    margin: 50px auto 0 auto;
+    padding: 10px;
+    width: 100%;
+}
+
+.main-logo {
+    display: block;
+    margin: 25px auto 0px auto;
+    max-width: 850px;
+    width: 100%;
+}
+
+.main-heading {
+    color: gray;
+    font-size: 24px;
+    font-weight: lighter;
+    letter-spacing: 3px;
+    text-align: center;
+}
+
+.input-label {
+    color: gray;
+    font-size: 24px;
+    font-weight: lighter;
+    text-align: center;
+}
+
+.input-box {
+    align-content: center;
+    display: flex;
+    justify-content: center;
+    margin: 50px auto;
+}
+
+.input {
+    border: 1px solid #000000;
+    border-radius: 10px 0px 0px 10px;
+    display: block;
+    font-size: 18px;
+    font-weight: 300;
+    margin: 0px 0;
+    padding: 25px;
+    text-align: center;
+}
+
+.btn {
+    background-color: #000000;
+    border-radius: 0px 10px 10px 0px;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 15px;
+}
+
+@media screen and (max-width: 800px) {
+    .main-heading {
+        font-size: 20px;
+    }
+
+    .input {
+        font-size: 14px;
+    }
+
+    .btn {
+        font-size: 14px;
+    }
+}
