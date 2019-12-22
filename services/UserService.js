@@ -52,7 +52,7 @@ const US = {
     },
     // returns user if valid, returns false if not
     async isValidUserCredentials(params) {
-        return UserModel.find({username: params.username}).then(user => {
+        return UserModel.find({username: params.username}).limit(1).then(user => {
             return bcrypt.compare(params.password, user[0].password).then((res) => {
                 if (res) {
                     return user;
