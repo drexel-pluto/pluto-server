@@ -5,7 +5,8 @@ const bcrypt = require('bcryptjs');
 const US = {
     async createUser(params) {
         await US.checkParams(params);
-        await US.checkUsernameTaken(params);
+        await US.isUsernameAvailable(params);
+        await US.checkEmailExists(params);
 
         params.hashedPass = await US.encryptPassword(params);
         return await US.saveUser(params);
@@ -21,14 +22,30 @@ const US = {
         if (!params.email.slice().includes('.')) { return Promise.reject('Invalid email provided.'); }
         return;
     },
-    async checkUsernameTaken(params) {
+    async isUsernameAvailable(params) {
+        const isUsernameInUse = await US.isUsernameInUse(params);
+        if (isUsernameInUse) { return Promise.reject('Username already taken.'); }
+        return;
+    },
+    async isUsernameInUse(params) {
         return UserModel
                 .find({username: params.username})
                 .then(data => {
                     if (isEmpty(data)) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                });
+    },
+    async checkEmailExists(params) {
+        return UserModel
+                .find({email: params.email})
+                .then(data => {
+                    if (isEmpty(data)) {
                         return;
                     } else {
-                        return Promise.reject('Username already taken.');
+                        return Promise.reject('Email already in use.');
                     }
                 });
     },
@@ -61,6 +78,25 @@ const US = {
                 }
             });
         });
+    },
+    async getNumberOfFriends(userObj) {
+        return userObj.friends.length;
+    },
+    async getUser(username) {
+        const user = await UserModel.find({ username }).limit(1);
+
+        if (isEmpty(user)) { return Promise.reject('User does not exist.'); }
+        return user[0];
+    },
+    async getFriends(params) {
+        const user = await UserModel
+                            .find({ username: params.user.username })
+                            .limit(1)
+                            .populate({
+                                path: 'friends.friend',
+                                select: ['username', 'name', 'email', 'profilePicURL']
+                            });
+        return user[0].friends;
     }
 }
 

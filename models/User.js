@@ -34,12 +34,42 @@ const UserSchema = new Schema({
     feed: {
         type: [Schema.Types.ObjectId]
     },
-    friends: {
-        type: [Schema.Types.ObjectId]
-    },
-    friendRequests: {
-        type: [Schema.Types.ObjectId]
-    },
+    friends: [
+        {
+            friendSince: {
+                type: Date,
+                default: Date.now
+            },
+            friend: {
+                type: Schema.Types.ObjectId,
+                ref: 'User'
+            }
+        }
+    ],
+    friendRequestsSent: [
+        {
+            timeRequestSent: {
+                type: Date,
+                default: Date.now
+            },
+            to: {
+                type: Schema.Types.ObjectId,
+                ref: 'User'
+            }
+        }
+    ],
+    friendRequestsReceived: [
+        {
+            timeRequestReceived: {
+                type: Date,
+                default: Date.now
+            },
+            from: {
+                type: Schema.Types.ObjectId,
+                ref: 'User'
+            }
+        }
+    ],
     groups: {
         title: { type: String },
         members: [Schema.Types.ObjectId] 
@@ -52,7 +82,7 @@ const UserSchema = new Schema({
     }
 });
 
-const User = mongoose.model('user', UserSchema);
+const User = mongoose.model('User', UserSchema);
 
 module.exports = User;
 
