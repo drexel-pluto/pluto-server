@@ -67,6 +67,7 @@ const FS = {
         if (senderFriendCount > friendCap) { return Promise.reject('Maximum number of friends reached.'); }
         return;
     },
+    // SLOW
     async makeSureRequestIsntPending(params) {
         const requests = params.user.friendRequestsSent;
         return new Promise((resolve, reject) => {
@@ -81,19 +82,35 @@ const FS = {
     async addFriend(partyA, partyB, _params) {
         const friendObj = { friend: partyB }
         const filter = { _id: partyA }
-        const update = { $push: { friends : friendObj }}
+        const update = {
+            $push: {
+                friends : friendObj,
+                friendIds: partyB.toString()
+            }
+        }
         return await UserModel.findOneAndUpdate(filter, update, { new: true });
     },
     async makeSureArentAlreadyFriends(params) {
-        const friends = params.user.friends;
-        return new Promise((resolve, reject) => {
-            friends.forEach(friend => {
-                if (friend.friend.toString() == params.requestedUser._id.toString()) {
-                    reject('You are already friends with this person.');
-                }
-            });
-            resolve();
-        });
+        const friends = params.user.friendIds;
+        const friendSet = new Set(friends);
+        if (friendSet.has(params.requestedUser._id.toString())) {
+            return Promise.reject('You are already friends with this person.');
+        }
+        return;
+    },
+    async isConfirmedFriend(userObj, possibleFriendID, _params) {
+        const friends = userObj.friendIds;
+        const friendSet = new Set(friends);
+        return friendSet.has(possibleFriendID.toString());
+    },
+    async ensureFriends(userObj, possibleFriendID, _params) {
+        const friends = userObj.friendIds;
+        const friendSet = new Set(friends);
+        if (friendSet.has(possibleFriendID.toString())){
+            return;
+        } else {
+            return Promise.reject('You are not friends with this user.');
+        }
     },
     async handleFriendRemoval(params) {
         params.friendToRemove = await US.getUser(params.username);

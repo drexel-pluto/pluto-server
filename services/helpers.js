@@ -76,5 +76,10 @@ module.exports = {
     convertMilesToMeters(num){
         const val = parseFloat(num);
         return Math.round(val * 1609.34);
+    },
+    async asyncForEach(array, callback) {
+        for (let index = 0; index < array.length; index++) {
+            await callback(array[index], index, array);
+        }
     }
 };

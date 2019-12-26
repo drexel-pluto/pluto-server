@@ -13,7 +13,8 @@ router.post('/create', (req, res) => {
                 username: req.body.username,
                 name: req.body.name,
                 email: req.body.email,
-                password: req.body.password
+                password: req.body.password,
+                gender: req.body.gender
             }
             const user = await UserService.createUser(params);
             return res.status(200).send(user);
@@ -112,6 +113,34 @@ router.post('/friends/remove', authorizeUser, (req, res) => {
     })();
 });
 
+router.get('/friends/requests-in', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = { user: req.user }
+            const friendRequestsIn = await UserService.getFriendRequestsIn(params);
+            return res.status(200).send(friendRequestsIn);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', '/friends/requests-in', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
+router.get('/friends/requests-out', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = { user: req.user }
+            const friendRequestsOut = await UserService.getFriendRequestsOut(params);
+            return res.status(200).send(friendRequestsOut);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', '/friends/requests-out', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 router.get('/friends', authorizeUser, (req, res) => {
     ( async () => {
         try {
@@ -121,6 +150,41 @@ router.get('/friends', authorizeUser, (req, res) => {
         }
         catch (err) {
             const error = await ErrorService.buildError(500, 'UserController', '/friends', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
+router.post('/', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                userId: req.body.userId
+            }
+            const user = await UserService.fetchAUser(params);
+            return res.status(200).send(user);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', '/', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
+router.post('/update', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                field: req.body.field,
+                newValue: req.body.newValue
+            }
+            const user = await UserService.updateUserProfile(params);
+            return res.status(200).send(user);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', '/update', err);
             return res.status(500).send(error);
         }
     })();

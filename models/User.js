@@ -4,15 +4,23 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema({
     email: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     username: {
         type: String,
-        required: true
+        required: true,
+        minlength: 3,
+        maxlength: 25,
+        unique: true
+    },
+    gender: {
+        type: String
     },
     name: {
         type: String,
-        required: true
+        required: true,
+        maxlength: 50
     },
     isVerified: {
         default: false
@@ -22,18 +30,29 @@ const UserSchema = new Schema({
         required: true
     },
     bio: {
-        type: String
+        type: String,
+        maxlength: 150
     },
     createdAt: {
         type: Date,
         default: Date.now
     },
-    posts: {
-        type: [Schema.Types.ObjectId]
-    },
+    posts: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Post'
+        }
+    ],
+    archivedPosts: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Post'
+        }
+    ],
     feed: {
         type: [Schema.Types.ObjectId]
     },
+    friendIds: [String],
     friends: [
         {
             friendSince: {
@@ -70,10 +89,13 @@ const UserSchema = new Schema({
             }
         }
     ],
-    groups: {
-        title: { type: String },
-        members: [Schema.Types.ObjectId] 
-    },
+    groups: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Group'
+        }
+    ],
+    groupIds: [String],
     birthday: {
         type: Date
     },
