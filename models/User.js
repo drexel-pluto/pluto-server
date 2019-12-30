@@ -49,8 +49,9 @@ const UserSchema = new Schema({
             ref: 'Post'
         }
     ],
-    feed: {
-        type: [Schema.Types.ObjectId]
+    feedCollector: {
+        type: Schema.Types.ObjectId,
+        ref: 'UserFeed'
     },
     friendIds: [String],
     friends: [

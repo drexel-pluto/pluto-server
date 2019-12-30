@@ -1,4 +1,5 @@
 const UserModel = require('../models/User');
+const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
 const bcrypt = require('bcryptjs');
 const FS = require('./FriendService');
@@ -10,6 +11,11 @@ const US = {
         await US.checkEmailExists(params);
 
         params.hashedPass = await US.encryptPassword(params);
+
+        const feedAggregator = await US.createFeedAggregator(params);
+
+        params.feedAggregator = feedAggregator._id;
+        
         return await US.saveUser(params);
     },
     async checkParams(params) {
@@ -68,7 +74,8 @@ const US = {
             email: params.email,
             password: params.hashedPass,
             name: params.name,
-            gender: params.gender
+            gender: params.gender,
+            feedCollector: params.feedAggregator
         });
     },
     // returns user if valid, returns false if not
@@ -154,6 +161,16 @@ const US = {
         }
         return;
     }
+    // },
+    // async createFeedAggregator(_params) {
+    //     return await UserFeedModel.create({
+    //         posts: []
+    //     });
+    // },
+    // async getFeedCollectorId(userId, _params) {
+    //     const user = await US.getUserById(userId);
+    //     return user.feedCollector;
+    // }
 }
 
 module.exports = US;

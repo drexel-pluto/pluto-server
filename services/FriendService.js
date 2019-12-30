@@ -1,12 +1,11 @@
 const UserModel = require('../models/User');
-const US = require('./UserService');
-const { isEmpty } = require('./helpers');
 const friendCap = require('../config/globals').maxNumberOfFriendsAllowed;
+const US = require('../models/../services/UserService');
 
 const FS = {
     async sendRequest(params) {
         if (params.username == params.user.username) { return Promise.reject('That\'s you, silly goose!'); }
-        
+        console.log(US);
         // Refreshing user param bc token will contain stale user object
         params.user = await US.getUser(params.user.username);
         params.requestedUser = await US.getUser(params.username);
@@ -109,10 +108,11 @@ const FS = {
         if (friendSet.has(possibleFriendID.toString())){
             return;
         } else {
-            return Promise.reject('You are not friends with this user.');
+            return Promise.reject(`You are not friends with this user: ${possibleFriendID}`);
         }
     },
     async handleFriendRemoval(params) {
+        // TO DO -- remove unfriended person's posts from collector
         params.friendToRemove = await US.getUser(params.username);
         await FS.removeFriend(params.friendToRemove._id, params.user._id);
         return await FS.removeFriend(params.user._id, params.friendToRemove._id);
