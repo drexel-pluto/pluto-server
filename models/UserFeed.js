@@ -7,10 +7,17 @@ const Schema = mongoose.Schema;
 const UserFeedSchema = new Schema({
     posts: [
         {
-            type: Schema.Types.ObjectId,
-            ref: 'Post'
+            poster: {
+                type: Schema.Types.ObjectId,
+                ref: 'User'
+            },
+            post: {
+                type: Schema.Types.ObjectId,
+                ref: 'Post'
+            }
         }
-    ]
+    ],
+    postIds: [String]
 });
 
 const UserFeed = mongoose.model('UserFeed', UserFeedSchema);

@@ -1,9 +1,28 @@
-module.exports = {
-    errors: require('./ErrorService'),
-    friends: require('./FriendService'),
-    groups: require('./GroupService'),
-    helpers: require('./helpers'),
-    images: require('./ImageUploadService'),
-    posts: require('./PostService'),
-    users: require('./UserService')
-}
+const FriendService = require('./FriendService');
+const UserService = require('./UserService');
+const GroupService = require('./GroupService');
+const PostService = require('./PostService');
+const HelperService = require('./helpers');
+
+const PlutoServices = {
+    FS: FriendService(),
+    GS: GroupService(),
+    PS: PostService(),
+    US: UserService(),
+    init : function() {
+        this.FS.parent = this;
+        this.GS.parent = this;
+        this.PS.parent = this;
+        this.US.parent = this;
+
+        this.FS.initialize();
+        this.GS.initialize();
+        this.PS.initialize();
+        this.US.initialize();
+
+        delete this.init;
+        return this;
+    }
+};
+
+module.exports = PlutoServices;

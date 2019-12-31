@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const ErrorService = require('../services/ErrorService');
-const GroupService = require('../services/GroupService');
+const PlutoServices = require('../services/PlutoServices');
+
+// Make sure the services havent been initialized
+if (typeof PlutoServices.init === "function") { 
+    PlutoServices.init();
+}
 
 router.post('/create', (req, res) => {
     ( async () => {
@@ -10,7 +15,7 @@ router.post('/create', (req, res) => {
                 user: req.user,
                 groupName: req.body.groupName
             }
-            const group = await GroupService.createNewGroup(params);
+            const group = await PlutoServices.GS.createNewGroup(params);
             return res.status(200).send(group);
         }
         catch (err) {
@@ -28,7 +33,7 @@ router.post('/members/add', (req, res) => {
                 groupId: req.body.groupId,
                 friendToAdd: req.body.friendToAdd
             }
-            const group = await GroupService.addUserToGroup(params);
+            const group = await PlutoServices.GS.addUserToGroup(params);
             return res.status(200).send(group);
         }
         catch (err) {
@@ -46,7 +51,7 @@ router.post('/members/remove', (req, res) => {
                 groupId: req.body.groupId,
                 friendToRemove: req.body.friendToRemove
             }
-            const group = await GroupService.pullUserFromGroup(params);
+            const group = await PlutoServices.GS.pullUserFromGroup(params);
             return res.status(200).send(group);
         }
         catch (err) {
@@ -64,7 +69,7 @@ router.post('/edit-name', (req, res) => {
                 groupId: req.body.groupId,
                 newTitle: req.body.newTitle
             }
-            const group = await GroupService.editGroupName(params);
+            const group = await PlutoServices.GS.editGroupName(params);
             return res.status(200).send(group);
         }
         catch (err) {
@@ -81,7 +86,7 @@ router.post('/delete', (req, res) => {
                 user: req.user,
                 groupId: req.body.groupId
             }
-            const group = await GroupService.deleteGroup(params);
+            const group = await PlutoServices.GS.deleteGroup(params);
             return res.status(200).send(group);
         }
         catch (err) {
@@ -95,7 +100,7 @@ router.get('/all', (req, res) => {
     ( async () => {
         try {
             const params = { user: req.user }
-            const groups = await GroupService.getGroups(params);
+            const groups = await PlutoServices.GS.getGroups(params);
             return res.status(200).send(groups);
         }
         catch (err) {
@@ -112,7 +117,7 @@ router.post('/one', (req, res) => {
                 user: req.user,
                 groupId: req.body.groupId
             }
-            const group = await GroupService.getGroup(params);
+            const group = await PlutoServices.GS.getGroup(params);
             return res.status(200).send(group);
         }
         catch (err) {

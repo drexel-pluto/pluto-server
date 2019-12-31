@@ -10,9 +10,15 @@ require('dotenv').config();
 
 //Database configuration
 const db = process.env.DB;
+const mongooseOpts = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+};
 
 //Connect to database
-mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(db, mongooseOpts)
     .then(() => console.log('MongoDB Connected...'))
     .catch(err => console.log(err));
 
@@ -35,13 +41,19 @@ const jwt = require('jsonwebtoken');
 const US = require('./services/UserService');
 app.use(passport.initialize());
 
+const PlutoServices = require('./services/PlutoServices');
+// Makes sure the services havent been initialized
+if (typeof PlutoServices.init === "function") { 
+    PlutoServices.init();
+}
+
 const localStrategy =  new LocalStrategy((username, password, done) => {
   (async() => {
     try {
         const params = { username, password };
-        console.log(params);
+
         // Find and authenticate user based on `username` and `password`
-        let user = await US.isValidUserCredentials(params);
+        let user = await PlutoServices.US.isValidUserCredentials(params);
         if (user) {
             user = Object.assign({}, user);
             delete user.password; //remove password from result
@@ -56,6 +68,13 @@ const localStrategy =  new LocalStrategy((username, password, done) => {
   })();
 });
 passport.use(localStrategy);
+
+
+// Services initialization
+// app.use((req, res, next) => {
+//   req.services = require('./services/PlutoServices');
+//   next();
+// });
 
 const localAuth = passport.authenticate('local', { session: false, failWithError: true });
 app.post('/api/login', localAuth, (req, res) => {

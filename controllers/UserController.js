@@ -1,10 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const UserService = require('../services/UserService');
-const FriendService = require('../services/FriendService');
 const ErrorService = require('../services/ErrorService');
 const passport = require('passport');
 const authorizeUser = passport.authenticate('jwt', { session: false, failWithError: true });
+const PlutoServices = require('../services/PlutoServices');
+
+// Make sure the services havent been initialized
+if (typeof PlutoServices.init === "function") { 
+    PlutoServices.init();
+}
+
 
 router.post('/create', (req, res) => {
     ( async () => {
@@ -16,7 +21,7 @@ router.post('/create', (req, res) => {
                 password: req.body.password,
                 gender: req.body.gender
             }
-            const user = await UserService.createUser(params);
+            const user = await PlutoServices.US.createUser(params);
             return res.status(200).send(user);
         }
         catch (err) {
@@ -33,7 +38,7 @@ router.post('/friends/request', authorizeUser, (req, res) => {
                 user: req.user,
                 username: req.body.username,
             }
-            const friendRequest = await FriendService.sendRequest(params);
+            const friendRequest = await PlutoServices.FS.sendRequest(params);
             return res.status(200).send(friendRequest);
         }
         catch (err) {
@@ -50,7 +55,7 @@ router.post('/friends/request/reject', authorizeUser, (req, res) => {
                 user: req.user,
                 username: req.body.username
             }
-            const friendRequestRejection = await FriendService.rejectFriendRequest(params);
+            const friendRequestRejection = await PlutoServices.FS.rejectFriendRequest(params);
             return res.status(200).send(friendRequestRejection);
         }
         catch (err) {
@@ -67,7 +72,7 @@ router.post('/friends/request/confirm', authorizeUser, (req, res) => {
                 user: req.user,
                 username: req.body.username
             }
-            const friendRequestConfirmation = await FriendService.confirmFriendRequest(params);
+            const friendRequestConfirmation = await PlutoServices.FS.confirmFriendRequest(params);
             return res.status(200).send(friendRequestConfirmation);
         }
         catch (err) {
@@ -86,7 +91,7 @@ router.post('/friends/request/cancel', authorizeUser, (req, res) => {
                 user: req.body,
                 username: req.user.username
             }
-            const friendRequestRejection = await FriendService.rejectFriendRequest(params);
+            const friendRequestRejection = await PlutoServices.FS.rejectFriendRequest(params);
             return res.status(200).send(friendRequestRejection);
         }
         catch (err) {
@@ -103,7 +108,7 @@ router.post('/friends/remove', authorizeUser, (req, res) => {
                 user: req.user,
                 username: req.body.username
             }
-            const friendRequestRemoval = await FriendService.handleFriendRemoval(params);
+            const friendRequestRemoval = await PlutoServices.FS.handleFriendRemoval(params);
             return res.status(200).send(friendRequestRemoval);
         }
         catch (err) {
@@ -117,7 +122,7 @@ router.get('/friends/requests-in', authorizeUser, (req, res) => {
     ( async () => {
         try {
             const params = { user: req.user }
-            const friendRequestsIn = await UserService.getFriendRequestsIn(params);
+            const friendRequestsIn = await PlutoServices.US.getFriendRequestsIn(params);
             return res.status(200).send(friendRequestsIn);
         }
         catch (err) {
@@ -131,7 +136,7 @@ router.get('/friends/requests-out', authorizeUser, (req, res) => {
     ( async () => {
         try {
             const params = { user: req.user }
-            const friendRequestsOut = await UserService.getFriendRequestsOut(params);
+            const friendRequestsOut = await PlutoServices.US.getFriendRequestsOut(params);
             return res.status(200).send(friendRequestsOut);
         }
         catch (err) {
@@ -145,7 +150,7 @@ router.get('/friends', authorizeUser, (req, res) => {
     ( async () => {
         try {
             const params = { user: req.user}
-            const friends = await UserService.getFriends(params);
+            const friends = await PlutoServices.US.getFriends(params);
             return res.status(200).send(friends);
         }
         catch (err) {
@@ -162,7 +167,7 @@ router.post('/', authorizeUser, (req, res) => {
                 user: req.user,
                 userId: req.body.userId
             }
-            const user = await UserService.fetchAUser(params);
+            const user = await PlutoServices.US.fetchAUser(params);
             return res.status(200).send(user);
         }
         catch (err) {
@@ -180,7 +185,7 @@ router.post('/update', authorizeUser, (req, res) => {
                 field: req.body.field,
                 newValue: req.body.newValue
             }
-            const user = await UserService.updateUserProfile(params);
+            const user = await PlutoServices.US.updateUserProfile(params);
             return res.status(200).send(user);
         }
         catch (err) {
