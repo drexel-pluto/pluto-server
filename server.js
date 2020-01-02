@@ -31,6 +31,15 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'client/')));
 
 
+
+// Initialize Pluto services
+const PlutoServices = require('./services/PlutoServices');
+// Makes sure the services havent been initialized
+if (typeof PlutoServices.init === "function") { 
+    PlutoServices.init();
+}
+
+
 // Passport setup
 const passport = require('passport');
 const { Strategy: LocalStrategy } = require('passport-local');
@@ -38,14 +47,7 @@ const jwtPassport = require('passport-jwt');
 const JwtStrategy = jwtPassport.Strategy;
 const ExtractJwt = jwtPassport.ExtractJwt;
 const jwt = require('jsonwebtoken');
-const US = require('./services/UserService');
 app.use(passport.initialize());
-
-const PlutoServices = require('./services/PlutoServices');
-// Makes sure the services havent been initialized
-if (typeof PlutoServices.init === "function") { 
-    PlutoServices.init();
-}
 
 const localStrategy =  new LocalStrategy((username, password, done) => {
   (async() => {
@@ -68,13 +70,6 @@ const localStrategy =  new LocalStrategy((username, password, done) => {
   })();
 });
 passport.use(localStrategy);
-
-
-// Services initialization
-// app.use((req, res, next) => {
-//   req.services = require('./services/PlutoServices');
-//   next();
-// });
 
 const localAuth = passport.authenticate('local', { session: false, failWithError: true });
 app.post('/api/login', localAuth, (req, res) => {

@@ -19,6 +19,7 @@ module.exports = () => {
             // Adding yourself to each group make it easier seeing your own posts within each feed
             const newGroup = await GroupModel.create({
                 members: [params.user._id],
+                memberIds: [params.user._id],
                 title: params.groupName,
                 owner: params.user._id
             });
@@ -35,7 +36,7 @@ module.exports = () => {
             const user = await US.getUser(params.user.username);
             params.user = user;
 
-            await FS.isConfirmedFriend(params.user, params.friendToAdd);
+            const good = await FS.ensureFriends(params.user, params.friendToAdd);
             return await GS.pushUserToGroup(params);
         },
         async deleteGroup(params) {
@@ -49,13 +50,19 @@ module.exports = () => {
         },
         async pushUserToGroup(params) {
             const filter = { _id: params.groupId }
-            const update = { $addToSet: { members : params.friendToAdd }}
+            const update = { $addToSet: {
+                members : params.friendToAdd,
+                memberIds: params.friendToAdd
+            }}
             const group = await GroupModel.findOneAndUpdate(filter, update, { new: true });
             return group;
         },
         async pullUserFromGroup(params) {
             const filter = { _id: params.groupId }
-            const update = { $pull: { members : params.friendToRemove }}
+            const update = { $pull: {
+                members : params.friendToRemove,
+                memberIds: params.friendToRemove
+            }}
             const group = await GroupModel.findOneAndUpdate(filter, update, { new: true });
             return group;
         },
@@ -94,16 +101,22 @@ module.exports = () => {
                             .lean()
                             .populate(population);
         },
-        async getGroup(params) {
+        async getPopulatedGroup(params) {
             const filter = { _id: params.groupId }
             const population = {
                 path: 'members',
                 select: ['username', 'email', 'name', 'birthday', 'profilePicURL']
             }
             return await GroupModel
-                            .find(filter)
+                            .findOne(filter)
                             .lean()
                             .populate(population);
+        },
+        async getRawGroup(params) {
+            const filter = { _id: params.groupId }
+            return await GroupModel
+                            .findOne(filter)
+                            .lean();
         }
     }
 }

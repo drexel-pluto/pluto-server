@@ -7,6 +7,7 @@ const GroupSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     }],
+    memberIds: [String],
     createdAt: {
         type: Date,
         default: Date.now

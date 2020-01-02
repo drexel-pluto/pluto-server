@@ -10,7 +10,6 @@ module.exports = () => {
         },
         async sendRequest(params) {
             if (params.username == params.user.username) { return Promise.reject('That\'s you, silly goose!'); }
-
             // Refreshing user param bc token will contain stale user object
             params.user = await US.getUser(params.user.username);
             params.requestedUser = await US.getUser(params.username);
@@ -20,10 +19,10 @@ module.exports = () => {
             await FS.makeSureRequestIsntPending(params);
 
             await FS.addReceivedRequestToUser(params);
-            return await FS.addSentRequestToUser(params);
+            await FS.addSentRequestToUser(params);
+            return await US.getFriendRequestsOut(params);
         },
         async confirmFriendRequest(params) {
-            // Refreshing user param bc token will contain stale user object
             params.receiver = await US.getUser(params.user.username);
             params.sender = await US.getUser(params.username);
 
@@ -32,10 +31,9 @@ module.exports = () => {
 
             await FS.addFriend(params.sender._id, params.receiver._id, params);
             await FS.addFriend(params.receiver._id, params.sender._id, params);
-            return 'Friend successfully added!'
+            return await US.getPublicUser(params.receiver._id);
         },
         async rejectFriendRequest(params) {
-            // Refreshing user param bc token will contain stale user object
             params.receiver = await US.getUser(params.user.username);
             params.sender = await US.getUser(params.username);
 
@@ -108,6 +106,8 @@ module.exports = () => {
             return friendSet.has(possibleFriendID.toString());
         },
         async ensureFriends(userObj, possibleFriendID, _params) {
+            // Pass if user is self
+            if (userObj._id == possibleFriendID) { return }
             const friends = userObj.friendIds;
             const friendSet = new Set(friends);
             if (friendSet.has(possibleFriendID.toString())){

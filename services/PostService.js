@@ -1,13 +1,14 @@
 const PostModel = require('../models/Post');
 const UserFeedModel = require('../models/UserFeed');
-const { isEmpty } = require('./helpers');
+const { isEmpty, contains } = require('./helpers');
 
 module.exports = () => {
-    var US, PS, FS;
+    var US, PS, FS, GS;
     return {
         initialize(){
             US = this.parent.US;
             FS = this.parent.FS;
+            GS = this.parent.GS;
             PS = this;
         },
         async checkPostingParams(params){
@@ -120,6 +121,39 @@ module.exports = () => {
                 return Promise.reject('You are not eligible to view this post.')
             }
             return;
+        },
+        async fetchPostsByGroup(params) {
+            const collectorId = params.user.feedCollector;
+            const group = await GS.getRawGroup(params);
+            const groupMemberIds = group.memberIds;
+            const filter =  { _id: collectorId }
+            const postPopulation = {
+                path: 'post',
+                model: 'Post',
+                select: ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt']
+            }
+            const posterPopulation = {
+                path: 'poster',
+                model: 'User',
+                select: ['username', 'name', 'profilePicURL']
+            }
+            // Not the best. Can be replaced by an aggregate thing for cleaner
+            const posts = await UserFeedModel
+                            .findOne(filter)
+                            .then(postObj => {
+                                return postObj.posts.filter(post => {
+                                    return contains.call(groupMemberIds, post.poster.toString())
+                                })
+                            })
+                            .then(rawPostArr => {
+                                return UserFeedModel.populate(rawPostArr, postPopulation)
+                                    .then(populatedArr => { return populatedArr });
+                            })
+                            .then(populatedArr => {
+                                return UserFeedModel.populate(populatedArr, posterPopulation)
+                                    .then(populatedArr => { return populatedArr });
+                            })
+            return posts;
         }
     }
 }

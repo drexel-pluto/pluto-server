@@ -79,4 +79,21 @@ router.post('/one', (req, res) => {
     })();
 });
 
+router.post('/from-group', (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                groupId: req.body.groupId
+            }
+            const posts = await PlutoServices.PS.fetchPostsByGroup(params);
+            return res.status(200).send(posts);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', '/group', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 module.exports = router;

@@ -99,34 +99,49 @@ module.exports = () => {
             return userObj.friends.length;
         },
         async getUser(username) {
-            const user = await UserModel.find({ username }).limit(1).lean();
+            const user = await UserModel.findOne({ username }).lean();
 
             if (isEmpty(user)) { return Promise.reject('User does not exist.'); }
-            return user[0];
+            return user;
         },
         async getUserById(id) {
-            const user = await UserModel.find({ _id: id }).limit(1).lean();
+            const user = await UserModel.findById( id ).lean();
 
             if (isEmpty(user)) { return Promise.reject('User does not exist.'); }
-            return user[0];
+            return user;
+        },
+        async getPublicUser(id) {
+            return await UserModel
+                                .findById(id)
+                                .lean()
+                                .select(['username', 'name', 'email', 'profilePicURL']);
         },
         async getFriends(params) {
             const user = await UserModel
-                                .find({ username: params.user.username })
-                                .limit(1)
+                                .findOne({ username: params.user.username })
                                 .lean()
                                 .populate({
                                     path: 'friends.friend',
                                     select: ['username', 'name', 'email', 'profilePicURL']
                                 });
-            return user[0].friends;
+            return user.friends;
         },
         async getFriendRequestsIn(params) {
-            const user = await US.getUser(params.user.username);
+            const user = await UserModel.findById(params.user._id)
+                                .lean()
+                                .populate({
+                                    path: 'friendRequestsReceived.from',
+                                    select: ['username', 'name', 'email', 'profilePicURL']
+                                });
             return user.friendRequestsReceived;
         },
         async getFriendRequestsOut(params) {
-            const user = await US.getUser(params.user.username);
+            const user = await UserModel.findById(params.user._id)
+                                .lean()
+                                .populate({
+                                    path: 'friendRequestsSent.to',
+                                    select: ['username']
+                                });
             return user.friendRequestsSent;
         },
         async fetchAUser(params) {
