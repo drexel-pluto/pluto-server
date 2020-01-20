@@ -91,17 +91,16 @@ passport.use(jwtStrategy);
 const authorizeUser = passport.authenticate('jwt', { session: false, failWithError: true });
 
 
-
-// Anything that doesn't match the above, send back index.html
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname + '/client/index.html'))
-});
-
 app.use('/api/user/groups', authorizeUser, require('./controllers/GroupController'));
 app.use('/api/posts', authorizeUser, require('./controllers/PostController'));
 app.use('/api/user', require('./controllers/UserController'));
 app.use('/api/public', require('./controllers/PublicController'));
 
+// Redirect to homepage if not accessing API
+// If anything above doesnt hit, this will get called
+app.get('/*', (req, res) => {
+  res.redirect('https://site.carbonology.now.sh/');
+});
 
 
 
