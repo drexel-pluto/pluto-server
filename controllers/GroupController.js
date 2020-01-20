@@ -117,7 +117,7 @@ router.post('/one', (req, res) => {
                 user: req.user,
                 groupId: req.body.groupId
             }
-            const group = await PlutoServices.GS.getGroup(params);
+            const group = await PlutoServices.GS.getPopulatedGroup(params);
             return res.status(200).send(group);
         }
         catch (err) {
