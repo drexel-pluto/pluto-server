@@ -17,7 +17,7 @@ router.post('/email/save', (req, res) => {
                 ip: ip
             }
             const email = await PlutoServices.PuS.addToEmailList(params);
-            return res.status(200).send(email);
+            return res.status(200).send({email});
         }
         catch (err) {
             const error = await ErrorService.buildError(500, 'PublicController', '/email/save', err);
