@@ -25,7 +25,7 @@ module.exports = () => {
         },
         // Dont want to return failures here, even if email exists
         // A failure will unnecessarily trip up front-end
-        async saveEmail(params){
+        async addToEmailList(params){
             await PuS.checkValidEmail(params);
             const isEmailAlreadySaved = await PuS.isEmailAlreadySaved(params);
 

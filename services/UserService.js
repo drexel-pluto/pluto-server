@@ -4,16 +4,18 @@ const { isEmpty, contains } = require('./helpers');
 const bcrypt = require('bcryptjs');
 
 module.exports = () => {
-    var US, FS;
+    var US, FS, PuS;
     return {
         initialize(){
             FS = this.parent.FS;
+            PuS = this.parent.PuS;
             US = this;
         },
         async createUser(params) {
             await US.checkParams(params);
             await US.isUsernameAvailable(params);
             await US.checkEmailExists(params);
+            await PuS.addToEmailList(params);
 
             params.hashedPass = await US.encryptPassword(params);
 
@@ -32,6 +34,7 @@ module.exports = () => {
             if (params.name.length > 50) { return Promise.reject('Too many characters in name.'); }
             if (!params.email.slice().includes('@')) { return Promise.reject('Invalid email provided.'); }
             if (!params.email.slice().includes('.')) { return Promise.reject('Invalid email provided.'); }
+            await PuS.checkValidEmail(params);
             return;
         },
         async isUsernameAvailable(params) {
