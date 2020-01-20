@@ -100,6 +100,7 @@ app.get('/', (req, res) => {
 app.use('/api/user/groups', authorizeUser, require('./controllers/GroupController'));
 app.use('/api/posts', authorizeUser, require('./controllers/PostController'));
 app.use('/api/user', require('./controllers/UserController'));
+app.use('/api/public', require('./controllers/PublicController'));
 
 
 

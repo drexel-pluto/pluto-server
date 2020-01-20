@@ -40,10 +40,10 @@ module.exports = {
             if (value.length === 0){
                 return true;
             }
-        }
-
-        // Checks for {}
-        if (typeof value === 'object'){
+        } else if (value === null) {
+            return true;
+        } else if (typeof value === 'object') {
+            // Checks for {}
             if (Object.entries(value).length === 0 && value.constructor === Object) {
                 return true;
             } else {
