@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const mongoose = require('mongoose');
+const { fileParser } = require('express-multipart-file-parser');
 
 const port = process.env.PORT || 3555;
 const app = express();
@@ -29,7 +30,11 @@ mongoose.connect(db, mongooseOpts)
 // Serve static files from the React frontend app
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'client/')));
-
+app.use(fileParser({
+	rawBodyOptions: {
+			limit: '2mb',  // Image file size limit
+	}
+}));
 
 
 // Initialize Pluto services

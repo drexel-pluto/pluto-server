@@ -11,14 +11,20 @@ if (typeof PlutoServices.init === "function") {
 router.post('/create', (req, res) => {
     ( async () => {
         try {
-            const params = {
-                user: req.user,
-                text: req.body.text,
-                // media: req.body.media,
-                durationDaysUntilArchive: req.body.daysUntilArchive,
-                audienceIds: req.body.audienceIds,
-                tag: req.body.tag
-            }
+            // const params = {
+            //     user: req.user,
+            //     text: req.body.text,
+            //     files: req.files,
+            //     durationDaysUntilArchive: req.body.daysUntilArchive,
+            //     audienceIds: req.body.audienceIds,
+            //     tag: req.body.tag,
+            // }
+            const params = JSON.parse(req.body.postParams);
+            params.user = req.user;
+            params.files = req.files;
+            params.durationDaysUntilArchive = params.daysUntilArchive;
+            delete params.daysUntilArchive;
+
             const post = await PlutoServices.PS.createPost(params);
             return res.status(200).send(post);
         }
@@ -90,7 +96,20 @@ router.post('/from-group', (req, res) => {
             return res.status(200).send(posts);
         }
         catch (err) {
-            const error = await ErrorService.buildError(500, 'PostController', '/group', err);
+            const error = await ErrorService.buildError(500, 'PostController', '/from-group', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
+router.post('/image', (req, res) => {
+    ( async () => {
+        try {
+            const url = await PlutoServices.IS.uploadMedia(req.files);
+            return res.status(200).send(url);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', '/image', err);
             return res.status(500).send(error);
         }
     })();

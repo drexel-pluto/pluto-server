@@ -3,12 +3,13 @@ const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
 
 module.exports = () => {
-    var US, PS, FS, GS;
+    var US, PS, FS, GS, IS;
     return {
         initialize(){
             US = this.parent.US;
             FS = this.parent.FS;
             GS = this.parent.GS;
+            IS = this.parent.IS;
             PS = this;
         },
         async checkPostingParams(params){
@@ -19,7 +20,8 @@ module.exports = () => {
             await PS.checkPostingParams(params);
             params.user = await US.getUser(params.user.username);
             await PS.ensureAudienceIsFriends(params);
-    
+            
+            const mediaURLs = await IS.uploadMedia(params.files);
             const archiveDay = await PS.getArchiveDay(params);
             const newAudience = await PS.addPosterToAudience(params);
             const post = await PostModel.create({
@@ -32,7 +34,8 @@ module.exports = () => {
                 allowedAudience: newAudience,
                 allowedAudienceIds: newAudience,
                 comments: [],
-                likes: 0
+                likes: 0,
+                mediaURLs
             });
             params.postId = post._id;
     
