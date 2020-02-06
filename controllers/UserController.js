@@ -195,4 +195,18 @@ router.post('/update', authorizeUser, (req, res) => {
     })();
 });
 
+router.get('/', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = { user: req.user }
+            const user = await PlutoServices.US.getFullOwnProfile(params);
+            return res.status(200).send(user);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', '/', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 module.exports = router;

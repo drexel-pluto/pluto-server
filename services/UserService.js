@@ -4,10 +4,11 @@ const { isEmpty, contains } = require('./helpers');
 const bcrypt = require('bcryptjs');
 
 module.exports = () => {
-    var US, FS, PuS;
+    var US, FS, GS, PuS;
     return {
         initialize(){
             FS = this.parent.FS;
+            GS = this.parent.GS;
             PuS = this.parent.PuS;
             US = this;
         },
@@ -193,6 +194,14 @@ module.exports = () => {
         async getFeedCollectorId(userId, _params) {
             const user = await US.getUserById(userId);
             return user.feedCollector;
+        },
+        async getFullOwnProfile(params) {
+            const user = params.user;
+            const friends = await US.getFriends(params);
+            const groups = await GS.getGroups(params);
+            user.friends = friends;
+            user.groups = groups;
+            return user;
         }
     }
 }
