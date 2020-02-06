@@ -20,7 +20,7 @@ module.exports = () => {
             await PS.checkPostingParams(params);
             params.user = await US.getUser(params.user.username);
             await PS.ensureAudienceIsFriends(params);
-            
+
             const mediaURLs = await IS.uploadMedia(params.files);
             const archiveDay = await PS.getArchiveDay(params);
             const newAudience = await PS.addPosterToAudience(params);
@@ -38,7 +38,7 @@ module.exports = () => {
                 mediaURLs
             });
             params.postId = post._id;
-    
+
             await PS.addPostToCollectors(params);
             return post;
         },
@@ -128,7 +128,7 @@ module.exports = () => {
         async fetchPostsByGroup(params) {
             const collectorId = params.user.feedCollector;
             const group = await GS.getRawGroup(params);
-            const groupMemberIds = group.memberIds;
+            const groupMemberIds = group.members.map(member => member.toString());
             const filter =  { _id: collectorId }
             const postPopulation = {
                 path: 'post',
