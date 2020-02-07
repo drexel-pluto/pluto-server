@@ -4,11 +4,12 @@ const { isEmpty, contains } = require('./helpers');
 const bcrypt = require('bcryptjs');
 
 module.exports = () => {
-    var US, FS, GS, PuS;
+    var US, FS, GS, PS, PuS;
     return {
         initialize(){
             FS = this.parent.FS;
             GS = this.parent.GS;
+            PS = this.parent.PS;
             PuS = this.parent.PuS;
             US = this;
         },
@@ -199,8 +200,10 @@ module.exports = () => {
             const user = params.user;
             const friends = await US.getFriends(params);
             const groups = await GS.getGroups(params);
+            const posts = await PS.getAllSelfPosts(params);
             user.friends = friends;
             user.groups = groups;
+            user.posts = posts;
             return user;
         }
     }

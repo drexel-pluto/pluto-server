@@ -95,11 +95,11 @@ passport.use(jwtStrategy);
 
 const authorizeUser = passport.authenticate('jwt', { session: false, failWithError: true });
 
+
 app.get('/logout', (req, res) => {
   req.logout();
   res.redirect('/');
 });
-
 
 app.use('/api/user/groups', authorizeUser, require('./controllers/GroupController'));
 app.use('/api/posts', authorizeUser, require('./controllers/PostController'));

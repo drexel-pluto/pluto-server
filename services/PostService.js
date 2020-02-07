@@ -157,6 +157,13 @@ module.exports = () => {
                                     .then(populatedArr => { return populatedArr });
                             })
             return posts;
+        },
+        async getAllSelfPosts(params) {
+            const allPosts = await PS.fetchAllPosts(params);
+            const selfPosts = allPosts.filter(post => {
+                return post.poster == params.user._id
+            });
+            return selfPosts;
         }
     }
 }
