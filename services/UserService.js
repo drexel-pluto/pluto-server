@@ -153,7 +153,10 @@ module.exports = () => {
             if (!isEmpty(params.userId)) {
                 await FS.ensureFriends(params.user, params.userId);
                 const user = await US.getUserById(params.userId);
-                return await US.getNonSensitiveUserInfo(user);
+                const bareUser = await US.getNonSensitiveUserInfo(user);
+                const usersPostsForRequester = await PS.fetchUsersPosts(params);
+                bareUser.posts = usersPostsForRequester;
+                return bareUser;
             } else {
                 return await US.getUser(params.user.username);
             }
@@ -205,6 +208,11 @@ module.exports = () => {
             user.groups = groups;
             user.posts = posts;
             return user;
+        },
+        async getUsersId(params) {
+            const user = await UserModel.findOne({ username: params.username });
+            if (isEmpty(user)) { return Promise.reject(`${params.username} is not a valid user.`) }
+            return user._id.toString();
         }
     }
 }

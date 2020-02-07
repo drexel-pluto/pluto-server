@@ -44,7 +44,7 @@ module.exports = () => {
         },
         async addPosterToAudience(params) {
             const audienceSet = new Set(params.audienceIds);
-            if (audienceSet.has(params.user._id)){
+            if (audienceSet.has(params.user._id.toString())){
                 return params.audienceIds;
             } else {
                 params.audienceIds.push(params.user._id);
@@ -158,12 +158,23 @@ module.exports = () => {
                             })
             return posts;
         },
+        async filterCollectedPostsByPoster(posterId, allPosts) {
+            return allPosts.filter(post => {
+                return post.poster == posterId
+            });
+        },
         async getAllSelfPosts(params) {
             const allPosts = await PS.fetchAllPosts(params);
-            const selfPosts = allPosts.filter(post => {
-                return post.poster == params.user._id
-            });
+            const selfPosts = await PS.filterCollectedPostsByPoster(params.user._id, allPosts);
             return selfPosts;
+        },
+        // Will take either a username param or userId param
+        async fetchUsersPosts(params) {
+            const friendId = (params.userId) ? params.userId : await US.getUsersId(params);
+            await FS.ensureFriends(params.user, friendId);
+            const allPosts = await PS.fetchAllPosts(params);
+            const usersPosts = await PS.filterCollectedPostsByPoster(friendId, allPosts);
+            return usersPosts;
         }
     }
 }

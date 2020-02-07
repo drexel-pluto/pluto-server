@@ -115,4 +115,21 @@ router.post('/image', (req, res) => {
     })();
 });
 
+router.get('/user/:user', (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                username: req.params.user,
+                user: req.user
+            }
+            const posts = await PlutoServices.PS.fetchUsersPosts(params);
+            return res.status(200).send(posts);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', '/user/:user', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 module.exports = router;
