@@ -3,6 +3,8 @@ const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
 require('mdn-polyfills/Number.isInteger');
 
+const PUBLIC_POST_SELECTION = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt'];
+
 module.exports = () => {
     var US, PS, FS, GS, IS;
     return {
@@ -94,7 +96,7 @@ module.exports = () => {
             // }
             //
             const feedId = params.user.feedCollector;
-            const defaultSelection = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt']
+            const defaultSelection = PUBLIC_POST_SELECTION;
             const selection = (params.optionalSelection)
                 ? defaultSelection.concat(params.optionalSelection)
                 : defaultSelection;
@@ -120,7 +122,7 @@ module.exports = () => {
         async fetchPost(params) {
             await PS.ensurePostIsInCollector(params);
             const post = await PostModel.findById(params.postId)
-                                .select(['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt']);
+                                .select(PUBLIC_POST_SELECTION);
             await FS.ensureFriends(params.user, post.poster);
             return post;
         },
@@ -147,7 +149,7 @@ module.exports = () => {
             const postPopulation = {
                 path: 'post',
                 model: 'Post',
-                select: ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt']
+                select: PUBLIC_POST_SELECTION
             }
             const posterPopulation = {
                 path: 'poster',
@@ -218,7 +220,8 @@ module.exports = () => {
                 $inc : { likes: params.amount },
                 $addToSet: { likers: params.user._id }
             }
-            return await PostModel.findOneAndUpdate(filter, update, { new: true });
+            const selection = PUBLIC_POST_SELECTION;
+            return await PostModel.findOneAndUpdate(filter, update, { new: true }).select(selection);
         },
         async checkReactionParams(params) {
             if (params.amount < 0) { return Promise.reject('Reactions cannot be taken away from a post.'); }
