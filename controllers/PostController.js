@@ -132,4 +132,22 @@ router.get('/user/:user', (req, res) => {
     })();
 });
 
+router.post('/react', (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                postId: req.body.postId,
+                amount: req.body.amountToAdd
+            }
+            const post = await PlutoServices.PS.increaseReactionCount(params);
+            return res.status(200).send(post);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 module.exports = router;

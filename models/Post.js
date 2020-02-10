@@ -40,7 +40,13 @@ const PostSchema = new Schema({
             content: String
         }
     ],
-    likes: Number
+    likes: Number,
+    likers: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
+    ]
 }, 
 { autoIndex: true });
 

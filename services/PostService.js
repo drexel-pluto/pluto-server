@@ -1,6 +1,7 @@
 const PostModel = require('../models/Post');
 const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
+require('mdn-polyfills/Number.isInteger');
 
 module.exports = () => {
     var US, PS, FS, GS, IS;
@@ -85,12 +86,23 @@ module.exports = () => {
             }));
         },
         async fetchAllPosts(params) {
+            // Sample params object
+            // Add an optionalSelection array to add custom select properties
+            // const params = {
+            //      user: req.user,
+            //      optionalSelection: ['likers']
+            // }
+            //
             const feedId = params.user.feedCollector;
+            const defaultSelection = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt']
+            const selection = (params.optionalSelection)
+                ? defaultSelection.concat(params.optionalSelection)
+                : defaultSelection;
             const feed = await UserFeedModel
                             .findById(feedId)
                             .populate({
                                 path: 'posts.post',
-                                select: ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt'],
+                                select: selection,
                                 populate: {
                                     path: 'poster',
                                     select: ['username', 'name', 'email', 'profilePicURL']
@@ -107,8 +119,10 @@ module.exports = () => {
         },
         async fetchPost(params) {
             await PS.ensurePostIsInCollector(params);
-            return await PostModel.findById(params.postId)
+            const post = await PostModel.findById(params.postId)
                                 .select(['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt']);
+            await FS.ensureFriends(params.user, post.poster);
+            return post;
         },
         async ensurePostOwner(postObj, userObj, _params) {
             if (postObj.poster != userObj._id) {
@@ -164,9 +178,20 @@ module.exports = () => {
             });
         },
         async getAllSelfPosts(params) {
+            const likerPopulation = {
+                path: 'post.likers',
+                model: 'User',
+                select: ['username', 'name', 'profilePicURL']
+            }
+
+            // Adding optional selection for fetchAllPosts
+            params.optionalSelection = ['likers'];
             const allPosts = await PS.fetchAllPosts(params);
+
+
             const selfPosts = await PS.filterCollectedPostsByPoster(params.user._id, allPosts);
-            return selfPosts;
+            const postsWithPopulatedLikers = await PostModel.populate(selfPosts, likerPopulation);
+            return postsWithPopulatedLikers;
         },
         // Will take either a username param or userId param
         async fetchUsersPosts(params) {
@@ -175,6 +200,31 @@ module.exports = () => {
             const allPosts = await PS.fetchAllPosts(params);
             const usersPosts = await PS.filterCollectedPostsByPoster(friendId, allPosts);
             return usersPosts;
+        },
+        async increaseReactionCount(params) {
+            await PS.checkReactionParams(params);
+
+            // We want to ensure users are friends and post is in collector before being able to like
+            // Fetch post does both of those things
+            // Can call individually, but need poster id before ensuring friends, hence the fetchPost() anyways
+            await PS.fetchPost(params);
+
+            const newPost = await PS.addToReactionCount(params);
+            return newPost;
+        },
+        async addToReactionCount(params) {
+            const filter = { _id: params.postId }
+            const update = {
+                $inc : { likes: params.amount },
+                $addToSet: { likers: params.user._id }
+            }
+            return await PostModel.findOneAndUpdate(filter, update, { new: true });
+        },
+        async checkReactionParams(params) {
+            if (params.amount < 0) { return Promise.reject('Reactions cannot be taken away from a post.'); }
+            if (!params.amount) { return Promise.reject('Reaction requests must include the "amountToAdd" field.'); }
+            if (!Number.isInteger(params.amount)) { return Promise.reject('"amountToAdd" field only takes integer values.'); }
+            return;
         }
     }
 }
