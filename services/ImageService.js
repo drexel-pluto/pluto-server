@@ -35,23 +35,36 @@ module.exports = () => {
 
 
 
-        // Returns array of media
+        // Returns single string if only one file is sent
+        // Returns array of strings if multiple media sent
         async uploadMedia(files) {
             if (!files) {
                 return [];
             }
 
-            const mediaMap = files.map(file => {
+            if (files.length === 1) {
                 return new Promise((resolve, reject) => {
-                    IS.sendUploadToGCS(file).then(url => {
+                    IS.sendUploadToGCS(files[0]).then(url => {
                         resolve(url);
                     }).catch(err => {
                         reject(err);
                     });
                 });
-            });
+            }
 
-            return Promise.all(mediaMap);
+            if (files.length >= 1) {
+                const mediaMap = files.map(file => {
+                    return new Promise((resolve, reject) => {
+                        IS.sendUploadToGCS(file).then(url => {
+                            resolve(url);
+                        }).catch(err => {
+                            reject(err);
+                        });
+                    });
+                });
+    
+                return Promise.all(mediaMap);
+            }
         },
 
 

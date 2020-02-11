@@ -14,13 +14,15 @@ if (typeof PlutoServices.init === "function") {
 router.post('/create', (req, res) => {
     ( async () => {
         try {
-            const params = {
-                username: req.body.username,
-                name: req.body.name,
-                email: req.body.email,
-                password: req.body.password,
-                gender: req.body.gender
-            }
+            // const params = {
+            //     username: req.body.username,
+            //     name: req.body.name,
+            //     email: req.body.email,
+            //     password: req.body.password,
+            //     gender: req.body.gender
+            // }
+            const params = JSON.parse(req.body.postParams);
+            params.files = req.files;
             const user = await PlutoServices.US.createUser(params);
             return res.status(200).send(user);
         }

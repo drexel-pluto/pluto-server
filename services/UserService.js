@@ -4,12 +4,13 @@ const { isEmpty, contains } = require('./helpers');
 const bcrypt = require('bcryptjs');
 
 module.exports = () => {
-    var US, FS, GS, PS, PuS;
+    var US, FS, GS, PS, IS, PuS;
     return {
         initialize(){
             FS = this.parent.FS;
             GS = this.parent.GS;
             PS = this.parent.PS;
+            IS = this.parent.IS;
             PuS = this.parent.PuS;
             US = this;
         },
@@ -18,6 +19,9 @@ module.exports = () => {
             await US.isUsernameAvailable(params);
             await US.checkEmailExists(params);
             await PuS.addToEmailList(params);
+            await US.ensureOneMedia(params);
+
+            params.profilePicURL =  await IS.uploadMedia(params.files);
 
             params.hashedPass = await US.encryptPassword(params);
 
@@ -85,7 +89,8 @@ module.exports = () => {
                 password: params.hashedPass,
                 name: params.name,
                 gender: params.gender,
-                feedCollector: params.feedAggregator
+                feedCollector: params.feedAggregator,
+                profilePicURL: params.profilePicURL
             });
         },
         // returns user if valid, returns false if not
@@ -213,6 +218,13 @@ module.exports = () => {
             const user = await UserModel.findOne({ username: params.username });
             if (isEmpty(user)) { return Promise.reject(`${params.username} is not a valid user.`) }
             return user._id.toString();
+        },
+        async ensureOneMedia(params) {
+            const numFiles = params.files.length;
+            if (numFiles > 1) {
+                return Promise.reject(`Only one file can be accepted. Media objects detected: ${numFiles}`);
+            }
+            return;
         }
     }
 }
