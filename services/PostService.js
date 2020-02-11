@@ -23,6 +23,7 @@ module.exports = () => {
             await PS.checkPostingParams(params);
             params.user = await US.getUser(params.user.username);
             await PS.ensureAudienceIsFriends(params);
+            await PS.ensurePositiveInteger(params.durationDaysUntilArchive);
 
             const mediaURLs = await IS.uploadMedia(params.files);
             const archiveDay = await PS.getArchiveDay(params);
@@ -224,9 +225,12 @@ module.exports = () => {
             return await PostModel.findOneAndUpdate(filter, update, { new: true }).select(selection);
         },
         async checkReactionParams(params) {
-            if (params.amount < 0) { return Promise.reject('Reactions cannot be taken away from a post.'); }
-            if (!params.amount) { return Promise.reject('Reaction requests must include the "amountToAdd" field.'); }
-            if (!Number.isInteger(params.amount)) { return Promise.reject('"amountToAdd" field only takes integer values.'); }
+            return await PS.ensurePositiveInteger(params.amount);
+        },
+        async ensurePositiveInteger(num) {
+            if (num < 0) { return Promise.reject('Supplied number must be a positive integer.'); }
+            if (!num) { return Promise.reject('No number supplied. Number must be a positive integer.'); }
+            if (!Number.isInteger(num)) { return Promise.reject('Supplied number must be a positive integer.'); }
             return;
         }
     }
