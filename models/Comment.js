@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const PostSchema = new Schema({
+const CommentSchema = new Schema({
     poster: {
         type: Schema.Types.ObjectId,
         ref: 'User'
@@ -10,28 +10,11 @@ const PostSchema = new Schema({
         type: Date,
         default: Date.now
     },
-    durationDaysUntilArchive: {
-        type: String
-    },
-    archiveDate: {
-        type: Date
-    },
-    archiveDateString: {
-        type: String
-    },
     text: {
         type: String
     },
-    allowedAudienceIds: [String],
-    allowedAudience: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
-        }
-    ],
+    replies: [Object],
     mediaURLs: [String],
-    tag: String,
-    comments: [Object],
     likes: {
         type: Number,
         default: 0
@@ -41,10 +24,14 @@ const PostSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'User'
         },
-    ]
+    ],
+    replyTo: {
+        type: Schema.Types.ObjectId,
+        ref: 'Comment'
+    }
 }, 
 { autoIndex: true });
 
-const Post = mongoose.model('Post', PostSchema);
+const Comment = mongoose.model('Comment', CommentSchema);
 
-module.exports = Post;
+module.exports = Comment;

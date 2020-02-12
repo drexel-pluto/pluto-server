@@ -235,6 +235,23 @@ module.exports = () => {
             if (!num) { return Promise.reject('No number supplied. Number must be a positive integer.'); }
             if (!Number.isInteger(num)) { return Promise.reject('Supplied number must be a positive integer.'); }
             return;
+        },
+        async appendComment(params) {
+            // Expects params.comment | params.postId
+            const filter = { _id: params.postId }
+            const update = {
+                $push : { comments: params.comment }
+            }
+            const selection = PUBLIC_POST_SELECTION;
+            return await PostModel.findOneAndUpdate(filter, update, { new: true }).select(selection);
+        },
+        async updateComments(params) {
+            // Expects params.postId | params.newComments
+            const filter = { _id: params.postId }
+            const update = { comments: params.newComments }
+            const selection = PUBLIC_POST_SELECTION;
+            return await PostModel.findOneAndUpdate(filter, update, { new: true }).select(selection);
+
         }
     }
 }

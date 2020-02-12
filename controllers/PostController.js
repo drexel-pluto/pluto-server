@@ -150,4 +150,43 @@ router.post('/react', (req, res) => {
     })();
 });
 
+router.post('/comment', (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                postId: req.body.postId,
+                text: req.body.text
+            }
+            const post = await PlutoServices.CS.sendCommentToPost(params);
+            return res.status(200).send(post);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
+router.post('/sub-comment', (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                postId: req.body.postId,
+                text: req.body.text,
+                replyTo: req.body.replyTo
+            }
+            const post = await PlutoServices.CS.sendCommentToComment(params);
+            return res.status(200).send(post);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
+
+
 module.exports = router;
