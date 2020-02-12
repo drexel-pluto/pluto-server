@@ -62,7 +62,7 @@ module.exports = () => {
                         });
                     });
                 });
-    
+
                 return Promise.all(mediaMap);
             }
         },
@@ -104,6 +104,20 @@ module.exports = () => {
             
                 stream.end(passedFile.buffer);
             });
+        },
+        async deleteFile(url) {
+            // Creates a client
+            const filename = await IS.getFilename(url);
+            // Deletes the file from the bucket
+            console.log(`Deleting gs://${CLOUD_BUCKET}/${filename}`);
+
+            return await storage
+              .bucket(CLOUD_BUCKET)
+              .file(filename)
+              .delete();
+        },
+        async getFilename(url) {
+            return url.split('/')[4];
         }
     }
 }

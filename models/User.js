@@ -101,7 +101,8 @@ const UserSchema = new Schema({
         type: Date
     },
     profilePicURL: {
-        type: String
+        type: String,
+        default: ''
     }
 });
 

@@ -19,9 +19,9 @@ module.exports = () => {
             await US.isUsernameAvailable(params);
             await US.checkEmailExists(params);
             await PuS.addToEmailList(params);
-            await US.ensureOneMedia(params);
+            await US.ensureNoMoreThanOneMedia(params);
 
-            params.profilePicURL =  await IS.uploadMedia(params.files);
+            params.profilePicURL = await IS.uploadMedia(params.files);
 
             params.hashedPass = await US.encryptPassword(params);
 
@@ -188,7 +188,7 @@ module.exports = () => {
             return await UserModel.findOneAndUpdate(filter, update, { new: true });
         },
         async ensureEditableProfileField(params) {
-            const acceptableFields = new Set(['birthday', 'bio', 'name', 'gender']);
+            const acceptableFields = new Set(['birthday', 'bio', 'name', 'gender', 'profilePicURL']);
             if (!acceptableFields.has(params.field)){
                 return Promise.reject(`Requested field (${params.field}) is not editable through this endpoint.`);
             }
@@ -219,10 +219,51 @@ module.exports = () => {
             if (isEmpty(user)) { return Promise.reject(`${params.username} is not a valid user.`) }
             return user._id.toString();
         },
-        async ensureOneMedia(params) {
+        async ensureNoMoreThanOneMedia(params) {
+            if (!params.files) { return; }
             const numFiles = params.files.length;
+
             if (numFiles > 1) {
                 return Promise.reject(`Only one file can be accepted. Media objects detected: ${numFiles}`);
+            }
+            return;
+        },
+        async deleteProfilePicture(params) {
+            // Refresh user object
+            params.user = await US.getUser(params.user.username);
+            await IS.deleteFile(params.user.profilePicURL);
+
+            params.field = 'profilePicURL';
+            params.newValue = '';
+
+            return await US.updateUserProfile(params);
+        },
+        async updateProfilePicture(params) {
+            // Refresh user object
+            params.user = await US.getUser(params.user.username);
+
+            await US.conditionalRemoveProfilePicture(params);
+            await US.ensureNoMoreThanOneMedia(params);
+
+            // Return user object if no needed update
+            if ((params.user.profilePicURL === '') && (!params.files)) {
+                return params.user;
+            }
+
+            // Get the URL if a file was sent
+            const newValue = (params.files)
+                ? await IS.uploadMedia(params.files)
+                : '';
+
+            params.field = 'profilePicURL';
+            params.newValue = newValue;
+
+            return await US.updateUserProfile(params);
+        },
+        async conditionalRemoveProfilePicture(params) {
+            const profilePicURL = params.user.profilePicURL;
+            if (!isEmpty(profilePicURL)) {
+                return await US.deleteProfilePicture(params);
             }
             return;
         }

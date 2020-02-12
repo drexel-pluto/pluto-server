@@ -211,4 +211,35 @@ router.get('/', authorizeUser, (req, res) => {
     })();
 });
 
+router.delete('/profile-picture', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = { user: req.user }
+            const user = await PlutoServices.US.deleteProfilePicture(params);
+            return res.status(200).send(user);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
+router.put('/profile-picture', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                files: req.files
+            }
+            const user = await PlutoServices.US.updateProfilePicture(params);
+            return res.status(200).send(user);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 module.exports = router;
