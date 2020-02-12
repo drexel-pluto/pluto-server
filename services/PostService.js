@@ -16,7 +16,10 @@ module.exports = () => {
             PS = this;
         },
         async checkPostingParams(params){
-            if (isEmpty(params.text)) { return Promise.reject('No content sent'); }
+            if (isEmpty(params.text) && (isEmpty(params.files))) { return Promise.reject('No content sent'); }
+            if (isEmpty(params.audienceIds)) { return Promise.reject('No audience specified.'); }
+            if (isEmpty(params.durationDaysUntilArchive)) { return Promise.reject('No decay duration specified.'); }
+            if ((params.audienceIds.length < 2) && (params.audienceIds[0] == params.user._id)) { return Promise.reject('No audience besides yourself specified.'); }
             return
         },
         async createPost(params) {
