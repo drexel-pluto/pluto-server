@@ -32,7 +32,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'client/')));
 app.use(fileParser({
 	rawBodyOptions: {
-			limit: '2mb',  // Image file size limit
+			limit: '100mb',  // Image file size limit
 	}
 }));
 
