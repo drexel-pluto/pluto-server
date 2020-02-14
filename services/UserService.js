@@ -124,7 +124,7 @@ module.exports = () => {
             return await UserModel
                                 .findById(id)
                                 .lean()
-                                .select(['username', 'name', 'email', 'profilePicURL']);
+                                .select(['username', 'name', 'profilePicURL']);
         },
         async getFriends(params) {
             const user = await UserModel
@@ -132,7 +132,7 @@ module.exports = () => {
                                 .lean()
                                 .populate({
                                     path: 'friends.friend',
-                                    select: ['username', 'name', 'email', 'profilePicURL']
+                                    select: ['username', 'name', 'profilePicURL']
                                 });
             return user.friends;
         },
@@ -141,7 +141,7 @@ module.exports = () => {
                                 .lean()
                                 .populate({
                                     path: 'friendRequestsReceived.from',
-                                    select: ['username', 'name', 'email', 'profilePicURL']
+                                    select: ['username', 'name', 'profilePicURL']
                                 });
             return user.friendRequestsReceived;
         },

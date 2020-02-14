@@ -6,13 +6,14 @@ require('mdn-polyfills/Number.isInteger');
 const PUBLIC_POST_SELECTION = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt'];
 
 module.exports = () => {
-    var US, PS, FS, GS, IS;
+    var US, PS, FS, GS, IS, CS;
     return {
         initialize(){
             US = this.parent.US;
             FS = this.parent.FS;
             GS = this.parent.GS;
             IS = this.parent.IS;
+            CS = this.parent.CS;
             PS = this;
         },
         async checkPostingParams(params){
@@ -77,7 +78,7 @@ module.exports = () => {
                 }
                 const filter = { _id: friendsFeedCollector }
                 const update = { $push: { posts : postObj, postIds: params.postId }}
-                return await UserFeedModel.findOneAndUpdate(filter, update, { new: true });
+                return UserFeedModel.findOneAndUpdate(filter, update, { new: true });
             }));
         },
         async removePostFromCollectors(params) {
@@ -88,7 +89,7 @@ module.exports = () => {
                         posts : { post: params.postId },
                         postIds: params.postId
                 }}
-                return await UserFeedModel.findOneAndUpdate(filter, update, { new: true });
+                return UserFeedModel.findOneAndUpdate(filter, update, { new: true });
             }));
         },
         async fetchAllPosts(params) {
@@ -127,6 +128,23 @@ module.exports = () => {
             await PS.ensurePostIsInCollector(params);
             const post = await PostModel.findById(params.postId)
                                 .select(PUBLIC_POST_SELECTION);
+            await FS.ensureFriends(params.user, post.poster);
+            post.comments = await CS.getCommentsWithPopulatedPosters(params);
+            return post;
+        },
+        async fetchRawPost(params) {
+            const post = await PostModel.findById(params.postId);
+            return post;
+        },
+        async fetchRawEnsuredPost(params) {
+            await PS.ensurePostIsInCollector(params);
+            const post = await PostModel.findById(params.postId);
+            await FS.ensureFriends(params.user, post.poster);
+            return post;
+        },
+        async ensurePostIsForUser(params) {
+            await PS.ensurePostIsInCollector(params);
+            const post = await PostModel.findById(params.postId).lean();
             await FS.ensureFriends(params.user, post.poster);
             return post;
         },
@@ -209,11 +227,7 @@ module.exports = () => {
         },
         async increaseReactionCount(params) {
             await PS.checkReactionParams(params);
-
-            // We want to ensure users are friends and post is in collector before being able to like
-            // Fetch post does both of those things
-            // Can call individually, but need poster id before ensuring friends, hence the fetchPost() anyways
-            await PS.fetchPost(params);
+            await PS.ensurePostIsForUser(params);
 
             const newPost = await PS.addToReactionCount(params);
             return newPost;
@@ -251,7 +265,68 @@ module.exports = () => {
             const update = { comments: params.newComments }
             const selection = PUBLIC_POST_SELECTION;
             return await PostModel.findOneAndUpdate(filter, update, { new: true }).select(selection);
+        },
+        async addParticipant(params) {
+            const post = await PS.fetchRawPost(params);
+            params.freshPost = post;
 
+            // Dont want to add duplicates
+            const isPostParticipant = await PS.isPostParticipant(params.user, post);
+            if (isPostParticipant) { return }
+
+            // ------ Only first time post participants beyond this point ------ 
+
+            // Create anonymous identity for person
+            const anonName = await PS.getAnonymousName(params);
+
+            const postsAnonCorrelator = post.anonymousCorrelator;
+            postsAnonCorrelator[params.user._id.toString()] = anonName;
+
+            const filter = { _id: params.postId }
+            const update = {
+                $addToSet : {
+                    participants: params.user._id,
+                    participantIds: params.user._id.toString(),
+                    takenAnonymousNames: anonName
+                },
+                anonymousCorrelator: postsAnonCorrelator
+            }
+            const selection = PUBLIC_POST_SELECTION;
+            return await PostModel.findOneAndUpdate(filter, update, { new: true }).select(selection);
+        },
+        async isPostParticipant (userObj, postObj) {
+            const participants = postObj.participantIds;
+            const participantSet = new Set(participants);
+            return participantSet.has(userObj._id.toString());
+        },
+        async getAnonymousName(params) {
+            // Needs params.freshPost object passed in
+            const post = params.freshPost;
+            const generatedAnonymousName = await CS.generateRandomName();
+
+            const takenNames = post.takenAnonymousNames;
+            const takenNameSet = new Set(takenNames);
+            const isTaken = takenNameSet.has(generatedAnonymousName.toString());
+
+            if (isTaken) {
+                return await PS.getAnonymousName(params);
+            } else {
+                return generatedAnonymousName;
+            }
+        },
+        async getFilteredPostData(rawPost, params) {
+            Object.keys(rawPost).forEach(key => {
+                if (!contains.call(PUBLIC_POST_SELECTION, key.toString())) {
+                    delete rawPost[key];
+                }
+            });
+            return rawPost;
+        },
+        async populateCommentPostersForManyPosts(postArr, params) {
+            return await Promise.all(postArr.map(async (post) => {
+                post.comments = await CS.getCommentsWithPopulatedPosters(params);
+                return post;
+            }));
         }
     }
 }

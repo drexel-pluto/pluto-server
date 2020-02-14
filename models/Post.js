@@ -41,7 +41,19 @@ const PostSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'User'
         },
-    ]
+    ],
+    participants: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
+    ],
+    participantIds: [String],
+    anonymousCorrelator: {
+        type: Object,
+        default: {}
+    },
+    takenAnonymousNames: [String],
 }, 
 { autoIndex: true });
 
