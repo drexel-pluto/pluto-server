@@ -76,7 +76,7 @@ const localStrategy =  new LocalStrategy((username, password, done) => {
 });
 passport.use(localStrategy);
 
-const localAuth = passport.authenticate('local', { session: false, failWithError: true });
+const localAuth = passport.authenticate('local', { session: false, failWithError: false });
 app.post('/api/login', localAuth, (req, res) => {
   const options = { expiresIn: '1d' };
   const payload = { user: req.user[0] };
@@ -93,7 +93,7 @@ const jwtStrategy = new JwtStrategy({
 });
 passport.use(jwtStrategy);
 
-const authorizeUser = passport.authenticate('jwt', { session: false, failWithError: true });
+const authorizeUser = passport.authenticate('jwt', { session: false, failWithError: false });
 
 
 app.get('/logout', (req, res) => {

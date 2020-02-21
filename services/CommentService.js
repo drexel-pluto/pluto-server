@@ -98,20 +98,20 @@ module.exports = () => {
             }));
             return newComments;
         },
-        async getDynamicCommentPoster(comment, params) {
-            const populatedParticipants = await CS.getPopulatedParticpants(params.rawPost, params);
+        async getDynamicCommentPoster(post, comment, params) {
+            const populatedParticipants = await CS.getPopulatedParticpants(post, params);
             const commenterIsFriend = await FS.isConfirmedFriend(params.user, comment.poster.toString());
             if (commenterIsFriend) {
                 return populatedParticipants[comment.poster.toString()]
             } else {
-                const anonNameFromPost = await CS.getAssociatedAnonymousNameFromPost(params.rawPost, comment.poster.toString(), params);
+                const anonNameFromPost = await CS.getAssociatedAnonymousNameFromPost(post, comment.poster.toString(), params);
                 return anonNameFromPost;
             }
         },
         async getPopulatedParticpants(postObj, params) {
             const participantObj = {}
-            const populatedParticipants = await Promise.all(postObj.participantIds.map(participant => {
-                return US.getPublicUser(participant);
+            const populatedParticipants = await Promise.all(postObj.participantIds.map(async participant => {
+                return await US.getPublicUser(participant);
             }));
             populatedParticipants.map(participant => {
                 participantObj[participant._id.toString()] = participant;
@@ -121,6 +121,22 @@ module.exports = () => {
         async getAssociatedAnonymousNameFromPost(postObj, userId, params) {
             const anonCorrelations = postObj.anonymousCorrelator;
             return anonCorrelations[userId];
+        },
+        async prepareSinglePostCommentSection(post, params) {
+            const newComments = await Promise.all(post.comments.map(async (comment) => {
+                comment.poster = await CS.getDynamicCommentPoster(post, comment, params);
+
+                // Handle comment replies as well
+                if (!isEmpty(comment.replies)) {
+                    comment.replies = await Promise.all(comment.replies.map(async (subcomment) => {
+                        subcomment.poster = await CS.getDynamicCommentPoster(post, subcomment, params);
+                        return subcomment;
+                    }));
+                }
+
+                return comment;
+            }));
+            return newComments;
         }
     }
 }

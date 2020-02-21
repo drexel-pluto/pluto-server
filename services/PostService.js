@@ -3,7 +3,7 @@ const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
 require('mdn-polyfills/Number.isInteger');
 
-const PUBLIC_POST_SELECTION = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt'];
+const PUBLIC_POST_SELECTION = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt', '_id'];
 
 module.exports = () => {
     var US, PS, FS, GS, IS, CS;
@@ -92,31 +92,6 @@ module.exports = () => {
                 return UserFeedModel.findOneAndUpdate(filter, update, { new: true });
             }));
         },
-        async fetchAllPosts(params) {
-            // Sample params object
-            // Add an optionalSelection array to add custom select properties
-            // const params = {
-            //      user: req.user,
-            //      optionalSelection: ['likers']
-            // }
-            //
-            const feedId = params.user.feedCollector;
-            const defaultSelection = PUBLIC_POST_SELECTION;
-            const selection = (params.optionalSelection)
-                ? defaultSelection.concat(params.optionalSelection)
-                : defaultSelection;
-            const feed = await UserFeedModel
-                            .findById(feedId)
-                            .populate({
-                                path: 'posts.post',
-                                select: selection,
-                                populate: {
-                                    path: 'poster',
-                                    select: ['username', 'name', 'email', 'profilePicURL']
-                                }
-                            });
-            return feed.posts;
-        },
         async deletePost(params) {
             const post = await PostModel.findById(params.postId);
             await PS.ensurePostOwner(post, params.user, params);
@@ -163,39 +138,6 @@ module.exports = () => {
             }
             return;
         },
-        async fetchPostsByGroup(params) {
-            const collectorId = params.user.feedCollector;
-            const group = await GS.getRawGroup(params);
-            const groupMemberIds = group.members.map(member => member.toString());
-            const filter =  { _id: collectorId }
-            const postPopulation = {
-                path: 'post',
-                model: 'Post',
-                select: PUBLIC_POST_SELECTION
-            }
-            const posterPopulation = {
-                path: 'poster',
-                model: 'User',
-                select: ['username', 'name', 'profilePicURL']
-            }
-            // Not the best. Can be replaced by an aggregate thing for cleaner
-            const posts = await UserFeedModel
-                            .findOne(filter)
-                            .then(postObj => {
-                                return postObj.posts.filter(post => {
-                                    return contains.call(groupMemberIds, post.poster.toString())
-                                })
-                            })
-                            .then(rawPostArr => {
-                                return UserFeedModel.populate(rawPostArr, postPopulation)
-                                    .then(populatedArr => { return populatedArr });
-                            })
-                            .then(populatedArr => {
-                                return UserFeedModel.populate(populatedArr, posterPopulation)
-                                    .then(populatedArr => { return populatedArr });
-                            })
-            return posts;
-        },
         async filterCollectedPostsByPoster(posterId, allPosts) {
             return allPosts.filter(post => {
                 return post.poster == posterId
@@ -203,27 +145,16 @@ module.exports = () => {
         },
         async getAllSelfPosts(params) {
             const likerPopulation = {
-                path: 'post.likers',
+                path: 'likers',
                 model: 'User',
                 select: ['username', 'name', 'profilePicURL']
             }
 
-            // Adding optional selection for fetchAllPosts
             params.optionalSelection = ['likers'];
-            const allPosts = await PS.fetchAllPosts(params);
-
-
-            const selfPosts = await PS.filterCollectedPostsByPoster(params.user._id, allPosts);
+            params.username = params.user.username;
+            const selfPosts = await PS.fetchUsersPosts(params);
             const postsWithPopulatedLikers = await PostModel.populate(selfPosts, likerPopulation);
             return postsWithPopulatedLikers;
-        },
-        // Will take either a username param or userId param
-        async fetchUsersPosts(params) {
-            const friendId = (params.userId) ? params.userId : await US.getUsersId(params);
-            await FS.ensureFriends(params.user, friendId);
-            const allPosts = await PS.fetchAllPosts(params);
-            const usersPosts = await PS.filterCollectedPostsByPoster(friendId, allPosts);
-            return usersPosts;
         },
         async increaseReactionCount(params) {
             await PS.checkReactionParams(params);
@@ -327,6 +258,95 @@ module.exports = () => {
                 post.comments = await CS.getCommentsWithPopulatedPosters(params);
                 return post;
             }));
+        },
+        async fetchPosts(filterFunction, params) {
+            // Get empty posts from feed collector
+            const posts = await PS.getAllEmptyPosts(params);
+
+            // Filter by meta info before population
+            const filteredPosts = (filterFunction)
+                ? await filterFunction(...params.filterVars, posts)
+                : posts;
+
+            // Hydrate with populated data
+            const hydratedPosts = await PS.hydrateEmptyPosts(filteredPosts, params);
+            const postsWithComments = await PS.preparePostsCommentSection(hydratedPosts, params);
+
+            // Sanitize out sensitive / non-display information
+            const sanitizedPosts = await PS.sanitizePostsInfo(postsWithComments, params);
+            return sanitizedPosts;
+        },
+        async getAllEmptyPosts(params) {
+            const feedId = params.user.feedCollector;
+            const feed = await UserFeedModel.findById(feedId);
+            return feed.posts;
+        },
+        async hydrateEmptyPosts(emptyPosts, params) {
+            const opts = {
+                path: 'post',
+                populate: {
+                    path: 'poster',
+                    select: ['username', 'name', 'email', 'profilePicURL']
+                }
+            }
+            let posts = await PostModel.populate(emptyPosts, opts);
+
+            // Remove post collector meta info
+            posts = posts.map(post => post.post);
+
+            return posts;
+        },
+        async preparePostsCommentSection(manyPosts, params) {
+            const postsWithComments = await Promise.all(manyPosts.map(async post => {
+                post.comments = await CS.prepareSinglePostCommentSection(post, params);
+                return post;
+            }));
+            return postsWithComments;
+        },
+        async sanitizePostsInfo(posts, params) {
+            const defaultSelection = PUBLIC_POST_SELECTION;
+            const selection = (params.optionalSelection)
+                ? defaultSelection.concat(params.optionalSelection)
+                : defaultSelection;
+            return posts.map(post => {
+                const newPostObj = {}
+                selection.forEach(key => {
+                    newPostObj[key] = post[key];
+                });
+
+                return newPostObj;
+            });
+        },
+        // Will take either a username param or userId param
+        async fetchUsersPosts(params) {
+            const friendId = (params.userId) ? params.userId : await US.getUsersId(params);
+            await FS.ensureFriends(params.user, friendId);
+
+            // Filter variables must be supplied in the params
+            params.filterVars = [friendId];
+            const filterFunction = async function(userId, posts) {
+                return posts.filter(post => post.poster.toString() === userId.toString());
+            };
+
+            const posts = await PS.fetchPosts(filterFunction, params);
+            return posts;
+        },
+        async fetchAllPosts(params) {
+            const posts = await PS.fetchPosts(null, params);
+            return posts;
+        },
+        async fetchPostsByGroup(params) {
+            const group = await GS.getRawGroup(params);
+            const groupMemberIds = group.members.map(member => member.toString());
+
+            // Filter variables must be supplied in the params
+            params.filterVars = [groupMemberIds];
+            const filterFunction = async function(groupMemberIds, posts) {
+                return posts.filter(post => contains.call(groupMemberIds, post.poster.toString()))
+            };
+
+            const posts = await PS.fetchPosts(filterFunction, params);
+            return posts;
         }
     }
 }
