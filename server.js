@@ -54,6 +54,7 @@ const ExtractJwt = jwtPassport.ExtractJwt;
 const jwt = require('jsonwebtoken');
 app.use(passport.initialize());
 
+const { contains } = require('./services/helpers');
 const localStrategy =  new LocalStrategy((username, password, done) => {
   (async() => {
     try {
@@ -61,10 +62,18 @@ const localStrategy =  new LocalStrategy((username, password, done) => {
 
         // Find and authenticate user based on `username` and `password`
         let user = await PlutoServices.US.isValidUserCredentials(params);
+
         if (user) {
-            user = Object.assign({}, user);
-            delete user.password; //remove password from result
-    
+            // Fields we will store in the JSON token
+            const keepFields = ['_id', 'username', 'email', 'profilePicURL', 'name', 'feedCollector', 'notificationCollector', 'friendIds'];
+
+            // Delete all fields we dont want to keep
+            Object.keys(user).forEach(key => {
+              if (!contains.call(keepFields, key)) {
+                delete user[key]
+              }
+            });
+
             done(null, user); // login success - sets `req.user = user`
         } else {
             done(null, false); // login failure

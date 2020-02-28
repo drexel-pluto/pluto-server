@@ -99,18 +99,17 @@ module.exports = () => {
         },
         // returns user if valid, returns false if not
         async isValidUserCredentials(params) {
-            return UserModel.find({username: params.username.toLowerCase()}).limit(1).then(user => {
-                return bcrypt.compare(params.password, user[0].password).then((res) => {
-                    if (res) {
-                        return user;
-                    } else {
-                        return false;
-                    }
-                });
+            const user = await UserModel.findOne({username: params.username.toLowerCase()}).lean();
+            return bcrypt.compare(params.password, user.password).then(res => {
+                if (res) {
+                    return user;
+                } else {
+                    return false;
+                }
             });
         },
         async getNumberOfFriends(userObj) {
-            return userObj.friends.length;
+            return userObj.friendIds.length;
         },
         async getUser(username) {
             const user = await UserModel.findOne({ username: username.toLowerCase() }).lean();

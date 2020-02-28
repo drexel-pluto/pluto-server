@@ -71,7 +71,8 @@ module.exports = () => {
         },
         // SLOW
         async makeSureRequestIsntPending(params) {
-            const requests = params.user.friendRequestsSent;
+            const user = await US.getUserById(params.user._id);
+            const requests = user.friendRequestsSent;
             return new Promise((resolve, reject) => {
                 requests.forEach(request => {
                     if (request.to.toString() == params.requestedUser._id.toString()) {
