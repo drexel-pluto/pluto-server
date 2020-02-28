@@ -242,4 +242,18 @@ router.put('/profile-picture', authorizeUser, (req, res) => {
     })();
 });
 
+router.get('/notifications', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = { user: req.user }
+            const notifications = await PlutoServices.NS.fetchNotifications(params);
+            return res.status(200).send(notifications);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 module.exports = router;

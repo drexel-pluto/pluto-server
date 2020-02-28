@@ -103,6 +103,10 @@ const UserSchema = new Schema({
     profilePicURL: {
         type: String,
         default: ''
+    },
+    notificationCollector: {
+        type: Schema.Types.ObjectId,
+        ref: 'UserNotificationCollector'
     }
 });
 

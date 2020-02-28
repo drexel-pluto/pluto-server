@@ -31,7 +31,7 @@ module.exports = () => {
 
             await FS.addFriend(params.sender._id, params.receiver._id, params);
             await FS.addFriend(params.receiver._id, params.sender._id, params);
-            return await US.getPublicUser(params.receiver._id);
+            return await US.getPublicUser(params.sender._id);
         },
         async rejectFriendRequest(params) {
             params.receiver = await US.getUser(params.user.username);
@@ -102,6 +102,7 @@ module.exports = () => {
         },
         async isConfirmedFriend(userObj, possibleFriendID, _params) {
             const friends = userObj.friendIds;
+            friends.push(userObj._id);
             const friendSet = new Set(friends);
             return friendSet.has(possibleFriendID.toString());
         },

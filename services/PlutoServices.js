@@ -6,12 +6,14 @@ const PublicService = require('./PublicService');
 const CommentService = require('./CommentService');
 const HelperService = require('./helpers');
 const ImageService = require('./ImageService');
+const NotificationService = require('./NotificationService');
 
 const PlutoServices = {
     CS: CommentService(),
     FS: FriendService(),
     GS: GroupService(),
     IS: ImageService(),
+    NS: NotificationService(),
     PS: PostService(),
     US: UserService(),
     PuS: PublicService(),
@@ -20,6 +22,7 @@ const PlutoServices = {
         this.FS.parent = this;
         this.GS.parent = this;
         this.IS.parent = this;
+        this.NS.parent = this;
         this.PS.parent = this;
         this.US.parent = this;
         this.PuS.parent = this;
@@ -28,6 +31,7 @@ const PlutoServices = {
         this.FS.initialize();
         this.GS.initialize();
         this.IS.initialize();
+        this.NS.initialize();
         this.PS.initialize();
         this.US.initialize();
         this.PuS.initialize();

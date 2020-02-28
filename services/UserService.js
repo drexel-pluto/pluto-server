@@ -1,5 +1,6 @@
 const UserModel = require('../models/User');
 const UserFeedModel = require('../models/UserFeed');
+const NotificationCollectorModel = require('../models/UserNotificationCollector');
 const { isEmpty, contains } = require('./helpers');
 const bcrypt = require('bcryptjs');
 
@@ -26,8 +27,10 @@ module.exports = () => {
             params.hashedPass = await US.encryptPassword(params);
 
             const feedAggregator = await US.createFeedAggregator(params);
-
             params.feedAggregator = feedAggregator._id;
+
+            const notificationCollector = await US.createNotificationCollector(params);
+            params.notificationCollector = notificationCollector._id;
             
             return await US.saveUser(params);
         },
@@ -90,7 +93,8 @@ module.exports = () => {
                 name: params.name,
                 gender: params.gender,
                 feedCollector: params.feedAggregator,
-                profilePicURL: params.profilePicURL
+                profilePicURL: params.profilePicURL,
+                notificationCollector: params.notificationCollector
             });
         },
         // returns user if valid, returns false if not
@@ -200,6 +204,11 @@ module.exports = () => {
                 postIds: []
             });
         },
+        async createNotificationCollector(_params) {
+            return await NotificationCollectorModel.create({
+                notifications: []
+            });
+        },
         async getFeedCollectorId(userId, _params) {
             const user = await US.getUserById(userId);
             return user.feedCollector;
@@ -266,6 +275,12 @@ module.exports = () => {
                 return await US.deleteProfilePicture(params);
             }
             return;
+        },
+        async getPosterById(id, params) {
+            return await UserModel
+                .findById(id)
+                .select(['username', 'name', 'email', 'profilePicURL'])
+                .lean();
         }
     }
 }

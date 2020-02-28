@@ -3,12 +3,13 @@ const CommentModel = require('../models/Comment');
 require('mdn-polyfills/Number.isInteger');
 
 module.exports = () => {
-    var CS, US, PS, FS;
+    var CS, US, PS, FS, NS;
     return {
         initialize(){
             US = this.parent.US;
             FS = this.parent.FS;
             PS = this.parent.PS;
+            NS = this.parent.NS;
             CS = this;
         },
         async sendCommentToPost(params) {
@@ -28,7 +29,17 @@ module.exports = () => {
 
             await PS.addParticipant(params);
 
-            return newPost;
+            // Let poster know somebody commented
+            const notificationObj = {
+                notificationFor: post.poster,
+                notificationFrom: params.user._id,
+                notificationText: `${params.user.name} commented on your post`,
+                showUser: true
+            }
+            await NS.sendNotification(notificationObj);
+
+            const preparedPost = await PS.getPostForDelivery(newPost, params);
+            return preparedPost;
         },
         async checkCommentParams (params) {
             if (isEmpty(params.text)) { return Promise.reject('No content sent.'); }
@@ -53,10 +64,12 @@ module.exports = () => {
             });
 
             // Find and Update comment in comment model
+            let replyingToThisComment;
             const comments = post.comments;
             comments.forEach(comment => {
                 if (comment._id.toString() === params.replyTo.toString()) {
                     comment.replies.push(params.comment);
+                    replyingToThisComment = comment;
                 }
             });
 
@@ -65,8 +78,11 @@ module.exports = () => {
 
             await PS.addParticipant(params);
 
-            newPost.comments = await CS.getCommentsWithPopulatedPosters(params);
-            return newPost;
+            // Let poster know somebody commented
+            await CS.handleCommentReplyNotification(post, replyingToThisComment, params.comment, params);
+
+            const preparedPost = await PS.getPostForDelivery(newPost, params);
+            return preparedPost;
         },
         async generateRandomName () {
             const adjectiveList = ["Bald", "Beautiful", "Clean", "Dazzling", "Drab", "Elegant", "Fancy", "Glamorous", "Handsome", "Magnificent", "Quaint", "Quick", "Scruffy", "Shapely", "Red", "Orange", "Yellow", "Green", "Blue", "Purple"];
@@ -79,27 +95,8 @@ module.exports = () => {
 
             return randomName;
         },
-        async getCommentsWithPopulatedPosters (params) {
-            const rawPost = await PS.fetchRawPost(params);
-            params.rawPost = rawPost;
-
-            const newComments = await Promise.all(rawPost.comments.map(async (comment) => {
-                comment.poster = await CS.getDynamicCommentPoster(comment, params);
-
-                // Handle comment replies as well
-                if (!isEmpty(comment.replies)) {
-                    comment.replies = await Promise.all(comment.replies.map(async (subcomment) => {
-                        subcomment.poster = await CS.getDynamicCommentPoster(subcomment, params);
-                        return subcomment;
-                    }));
-                }
-
-                return comment;
-            }));
-            return newComments;
-        },
         async getDynamicCommentPoster(post, comment, params) {
-            const populatedParticipants = await CS.getPopulatedParticpants(post, params);
+            const populatedParticipants = params.participants;
             const commenterIsFriend = await FS.isConfirmedFriend(params.user, comment.poster.toString());
             if (commenterIsFriend) {
                 return populatedParticipants[comment.poster.toString()]
@@ -108,9 +105,9 @@ module.exports = () => {
                 return anonNameFromPost;
             }
         },
-        async getPopulatedParticpants(postObj, params) {
+        async getPopulatedParticpants(rawPostObj, params) {
             const participantObj = {}
-            const populatedParticipants = await Promise.all(postObj.participantIds.map(async participant => {
+            const populatedParticipants = await Promise.all(rawPostObj.participantIds.map(async participant => {
                 return await US.getPublicUser(participant);
             }));
             populatedParticipants.map(participant => {
@@ -123,6 +120,7 @@ module.exports = () => {
             return anonCorrelations[userId];
         },
         async prepareSinglePostCommentSection(post, params) {
+            params.participants = await CS.getPopulatedParticpants(post, params);
             const newComments = await Promise.all(post.comments.map(async (comment) => {
                 comment.poster = await CS.getDynamicCommentPoster(post, comment, params);
 
@@ -137,6 +135,23 @@ module.exports = () => {
                 return comment;
             }));
             return newComments;
+        },
+        async handleCommentReplyNotification (post, originalComment, newComment, params) {
+            if (params.user._id.toString() === originalComment.poster._id.toString()) { return }
+            const populatedParticipants = await CS.getPopulatedParticpants(post, params);
+            params.participants = populatedParticipants;
+
+            const name = await CS.getDynamicCommentPoster(post, originalComment, params);
+            const isFriends = (name.name) ? true : false;
+            const visibleName = (isFriends) ? name.name : name;
+            const notificationObj = {
+                notificationFor: originalComment.poster,
+                notificationFrom: params.user._id,
+                showUser: isFriends,
+                notificationText: `${visibleName} replied to your comment`
+            }
+            await NS.sendNotification(notificationObj);
+            return;
         }
     }
 }

@@ -101,11 +101,10 @@ module.exports = () => {
         },
         async fetchPost(params) {
             await PS.ensurePostIsInCollector(params);
-            const post = await PostModel.findById(params.postId)
-                                .select(PUBLIC_POST_SELECTION);
+            const post = await PostModel.findById(params.postId);
             await FS.ensureFriends(params.user, post.poster);
-            post.comments = await CS.getCommentsWithPopulatedPosters(params);
-            return post;
+            const preparedPost = await PS.getPostForDelivery(post, params);
+            return preparedPost;
         },
         async fetchRawPost(params) {
             const post = await PostModel.findById(params.postId);
@@ -187,15 +186,13 @@ module.exports = () => {
             const update = {
                 $push : { comments: params.comment }
             }
-            const selection = PUBLIC_POST_SELECTION;
-            return await PostModel.findOneAndUpdate(filter, update, { new: true }).select(selection);
+            return await PostModel.findOneAndUpdate(filter, update, { new: true });
         },
         async updateComments(params) {
             // Expects params.postId | params.newComments
             const filter = { _id: params.postId }
             const update = { comments: params.newComments }
-            const selection = PUBLIC_POST_SELECTION;
-            return await PostModel.findOneAndUpdate(filter, update, { new: true }).select(selection);
+            return await PostModel.findOneAndUpdate(filter, update, { new: true });
         },
         async addParticipant(params) {
             const post = await PS.fetchRawPost(params);
@@ -253,11 +250,12 @@ module.exports = () => {
             });
             return rawPost;
         },
-        async populateCommentPostersForManyPosts(postArr, params) {
-            return await Promise.all(postArr.map(async (post) => {
-                post.comments = await CS.getCommentsWithPopulatedPosters(params);
+        async populateCommentPostersForManyPosts(manyPosts, params) {
+            const postsWithComments = await Promise.all(manyPosts.map(async post => {
+                post.comments = await CS.prepareSinglePostCommentSection(post, params);
                 return post;
             }));
+            return postsWithComments;
         },
         async fetchPosts(filterFunction, params) {
             // Get empty posts from feed collector
@@ -317,6 +315,19 @@ module.exports = () => {
                 return newPostObj;
             });
         },
+        async sanitizePostInfo(post, params) {
+            const defaultSelection = PUBLIC_POST_SELECTION;
+            const selection = (params.optionalSelection)
+                ? defaultSelection.concat(params.optionalSelection)
+                : defaultSelection;
+
+            const newPostObj = {}
+            selection.forEach(key => {
+                newPostObj[key] = post[key];
+            });
+
+            return newPostObj;
+        },
         // Will take either a username param or userId param
         async fetchUsersPosts(params) {
             const friendId = (params.userId) ? params.userId : await US.getUsersId(params);
@@ -347,6 +358,13 @@ module.exports = () => {
 
             const posts = await PS.fetchPosts(filterFunction, params);
             return posts;
+        },
+        async getPostForDelivery(post, params) {
+            post.comments = await CS.prepareSinglePostCommentSection(post, params);
+            const sanitizedPost = await PS.sanitizePostInfo(post, params);
+            const poster = await US.getPosterById(post.poster);
+            sanitizedPost.poster = poster;
+            return sanitizedPost;
         }
     }
 }
