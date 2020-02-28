@@ -88,7 +88,7 @@ passport.use(localStrategy);
 const localAuth = passport.authenticate('local', { session: false, failWithError: false });
 app.post('/api/login', localAuth, (req, res) => {
   const options = { expiresIn: '1d' };
-  const payload = { user: req.user[0] };
+  const payload = { user: req.user };
   const authToken = jwt.sign(payload, process.env.AUTH_SECRET, options);
   res.json({ authToken });
 });
