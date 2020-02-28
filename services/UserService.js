@@ -53,7 +53,7 @@ module.exports = () => {
         },
         async isUsernameInUse(params) {
             return UserModel
-                    .find({username: params.username})
+                    .find({username: params.username.toLowerCase()})
                     .lean()
                     .then(data => {
                         if (isEmpty(data)) {
@@ -87,7 +87,7 @@ module.exports = () => {
         },
         async saveUser(params) {
             return UserModel.create({
-                username: params.username,
+                username: params.username.toLowerCase(),
                 email: params.email,
                 password: params.hashedPass,
                 name: params.name,
@@ -99,7 +99,7 @@ module.exports = () => {
         },
         // returns user if valid, returns false if not
         async isValidUserCredentials(params) {
-            return UserModel.find({username: params.username}).limit(1).then(user => {
+            return UserModel.find({username: params.username.toLowerCase()}).limit(1).then(user => {
                 return bcrypt.compare(params.password, user[0].password).then((res) => {
                     if (res) {
                         return user;
@@ -113,7 +113,7 @@ module.exports = () => {
             return userObj.friends.length;
         },
         async getUser(username) {
-            const user = await UserModel.findOne({ username }).lean();
+            const user = await UserModel.findOne({ username: username.toLowerCase() }).lean();
 
             if (isEmpty(user)) { return Promise.reject('User does not exist.'); }
             return user;
@@ -132,7 +132,7 @@ module.exports = () => {
         },
         async getFriends(params) {
             const user = await UserModel
-                                .findOne({ username: params.user.username })
+                                .findOne({ username: params.user.username.toLowerCase() })
                                 .lean()
                                 .populate({
                                     path: 'friends.friend',
@@ -224,7 +224,7 @@ module.exports = () => {
             return user;
         },
         async getUsersId(params) {
-            const user = await UserModel.findOne({ username: params.username });
+            const user = await UserModel.findOne({ username: params.username.toLowerCase() });
             if (isEmpty(user)) { return Promise.reject(`${params.username} is not a valid user.`) }
             return user._id.toString();
         },
