@@ -1,5 +1,6 @@
 const NCModel = require('../models/UserNotificationCollector');
 const NotificationModel = require('../models/Notification');
+const globals = require('../config/globals');
 
 module.exports = () => {
     var NS;
@@ -41,7 +42,20 @@ module.exports = () => {
                                     .limit(25);
             const populatedNotifications = await NotificationModel
                                             .populate(notifications.notifications, { path: 'from', select: ['profilePicURL', 'username', 'name']});
-            return populatedNotifications;
+            const filteredNotifications = await NS.getFilteredNotifications(populatedNotifications);
+            return filteredNotifications;
+        },
+        async getFilteredNotifications(populatedNotifs) {
+            return populatedNotifs.map(notif => {
+                if (!notif.showUser) {
+                    delete notif.from;
+                    notif.from = {}
+                    notif.from.profilePicURL = globals.getRandomDefaultPic();
+                    return notif;
+                } else {
+                    return notif;
+                }
+            });
         }
     }
 }
