@@ -30,7 +30,7 @@ const PostSchema = new Schema({
         }
     ],
     mediaURLs: [String],
-    tag: String,
+    tags: [Object],
     comments: [Object],
     likes: {
         type: Number,

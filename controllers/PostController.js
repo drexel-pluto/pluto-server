@@ -17,7 +17,7 @@ router.post('/create', (req, res) => {
             //     files: req.files,
             //     durationDaysUntilArchive: req.body.daysUntilArchive,
             //     audienceIds: req.body.audienceIds,
-            //     tag: req.body.tag,
+            //     tags: req.body.tags,
             // }
             const params = JSON.parse(req.body.postParams);
             params.user = req.user;

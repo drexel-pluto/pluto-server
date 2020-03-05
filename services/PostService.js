@@ -3,7 +3,7 @@ const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
 require('mdn-polyfills/Number.isInteger');
 
-const PUBLIC_POST_SELECTION = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt', '_id'];
+const PUBLIC_POST_SELECTION = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt', '_id', 'tags'];
 
 module.exports = () => {
     var US, PS, FS, GS, IS, CS;
@@ -38,7 +38,7 @@ module.exports = () => {
                 archiveDate: archiveDay,
                 archiveDateString: archiveDay,
                 text: params.text,
-                tag: params.tag,
+                tags: params.tags,
                 allowedAudience: newAudience,
                 allowedAudienceIds: newAudience,
                 comments: [],
@@ -71,10 +71,12 @@ module.exports = () => {
         },
         async addPostToCollectors(params) {
             return await Promise.all(params.audienceIds.map(async (id) => {
+                const tags = await PS.getRawTags(params);
                 const friendsFeedCollector = await US.getFeedCollectorId(id);
                 const postObj = {
                     poster: params.user._id,
-                    post: params.postId
+                    post: params.postId,
+                    tags: tags
                 }
                 const filter = { _id: friendsFeedCollector }
                 const update = { $push: { posts : postObj, postIds: params.postId }}
@@ -365,6 +367,11 @@ module.exports = () => {
             const poster = await US.getPosterById(post.poster);
             sanitizedPost.poster = poster;
             return sanitizedPost;
+        },
+        async getRawTags(params) {
+            const tagObjs = params.tags;
+            const rawTags = tagObjs.map(tag => tag.name);
+            return rawTags;
         }
     }
 }

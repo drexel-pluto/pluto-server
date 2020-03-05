@@ -11,6 +11,7 @@ const UserFeedSchema = new Schema({
                 type: Schema.Types.ObjectId,
                 ref: 'User'
             },
+            tags: [String],
             post: {
                 type: Schema.Types.ObjectId,
                 ref: 'Post'
