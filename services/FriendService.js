@@ -2,9 +2,10 @@ const UserModel = require('../models/User');
 const friendCap = require('../config/globals').maxNumberOfFriendsAllowed;
 
 module.exports = () => {
-    var US, FS;
+    var NS, US, FS;
     return {
         initialize(){
+            NS = this.parent.NS;
             US = this.parent.US;
             FS = this;
         },
@@ -17,6 +18,7 @@ module.exports = () => {
             await FS.makeSureArentAlreadyFriends(params);
             await FS.hasFriendCapBeenReached(params);
             await FS.makeSureRequestIsntPending(params);
+            await FS.sendRequestNotification(params);
 
             await FS.addReceivedRequestToUser(params);
             await FS.addSentRequestToUser(params);
@@ -31,6 +33,9 @@ module.exports = () => {
 
             await FS.addFriend(params.sender._id, params.receiver._id, params);
             await FS.addFriend(params.receiver._id, params.sender._id, params);
+
+            await FS.confirmRequestNotification(params);
+
             return await US.getPublicUser(params.sender._id);
         },
         async rejectFriendRequest(params) {
@@ -128,6 +133,24 @@ module.exports = () => {
             const filter = { _id: partyA }
             const update = { $pull: { friends : { friend: partyB }}}
             return await UserModel.findOneAndUpdate(filter, update, { new: true });
+        },
+        async sendRequestNotification(params) {
+            const notificationObj = {
+                notificationFor: params.requestedUser._id,
+                notificationFrom: params.user._id,
+                notificationText: `${params.user.name} added you as a friend!`,
+                showUser: true
+            }
+            await NS.sendNotification(notificationObj);
+        },
+        async confirmRequestNotification(params) {
+            const notificationObj = {
+                notificationFor: params.sender._id,
+                notificationFrom: params.receiver._id,
+                notificationText: `${params.receiver.name} confirmed your friend request.`,
+                showUser: true
+            }
+            await NS.sendNotification(notificationObj);
         }
     }
 }

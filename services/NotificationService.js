@@ -36,13 +36,12 @@ module.exports = () => {
         },
         async fetchNotifications(params) {
             const notificationsCollectorId = params.user.notificationCollector;
-            const notifications = await NCModel.findById(notificationsCollectorId)
-                                                .populate({
-                                                    path: 'notifications.from',
-                                                    select: ['username', 'name', 'profilePicURL']
-                                                })
-                                                .limit(25);
-            return notifications.notifications;
+            const notifications = await NCModel
+                                    .findById(notificationsCollectorId)
+                                    .limit(25);
+            const populatedNotifications = await NotificationModel
+                                            .populate(notifications.notifications, { path: 'from', select: ['profilePicURL', 'username', 'name']});
+            return populatedNotifications;
         }
     }
 }
