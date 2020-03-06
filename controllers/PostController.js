@@ -187,6 +187,23 @@ router.post('/sub-comment', (req, res) => {
     })();
 });
 
+router.get('/:tag', (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                tag: req.params.tag
+            }
+            const posts = await PlutoServices.PS.getPostsByTag(params);
+            return res.status(200).send(posts);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 
 
 module.exports = router;

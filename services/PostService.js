@@ -382,6 +382,16 @@ module.exports = () => {
                 post.isLiked = isLiked;
                 return post;
             });
+        },
+        async getPostsByTag(params) {
+            // Filter variables must be supplied in the params
+            params.filterVars = [params.tag];
+            const filterFunction = async function(tag, posts) {
+                return posts.filter(post => contains.call(post.tags, tag));
+            };
+
+            const posts = await PS.fetchPosts(filterFunction, params);
+            return posts;
         }
     }
 }
