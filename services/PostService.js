@@ -79,7 +79,17 @@ module.exports = () => {
                     tags: tags
                 }
                 const filter = { _id: friendsFeedCollector }
-                const update = { $push: { posts : postObj, postIds: params.postId }}
+                const update = { $push: {
+                        "posts" : {
+                            $each: [ postObj ],
+                            $position: 0
+                        },
+                        "postIds": {
+                            $each: [ params.postId ],
+                            $position: 0
+                        }
+                    }
+                }
                 return UserFeedModel.findOneAndUpdate(filter, update, { new: true });
             }));
         },
