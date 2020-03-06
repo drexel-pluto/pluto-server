@@ -151,6 +151,32 @@ module.exports = () => {
                 showUser: true
             }
             await NS.sendNotification(notificationObj);
+        },
+        async getRawMutualFriends(username, params) {
+            const requester = await US.getUserById(params.user._id);
+            const otherPerson = await US.getUser(username);
+
+            const requesterFriends = requester.friendIds;
+            const otherPersonFriends = otherPerson.friendIds;
+            const otherPersonFriendSet = new Set(otherPersonFriends);
+
+            const mutualFriends = requesterFriends.filter(friendId => otherPersonFriendSet.has(friendId.toString()));
+            return mutualFriends;
+        },
+        async getNumberOfMutualFriends(username, params) {
+            const mutualFriends = await FS.getRawMutualFriends(username, params);
+            return mutualFriends.length;
+        },
+        async getPopulatedMutualFriends(username, params) {
+            const mutualFriends = await FS.getRawMutualFriends(username, params);
+            const populatedMutualFriends = await Promise.all(mutualFriends.map(async friendId => {
+                return await US.getPublicUser(friendId);
+            }));
+            const mutualFriendsObj = {
+                count: mutualFriends.length,
+                friends: populatedMutualFriends
+            }
+            return mutualFriendsObj;
         }
     }
 }

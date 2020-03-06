@@ -129,6 +129,18 @@ module.exports = () => {
                                 .lean()
                                 .select(['username', 'name', 'profilePicURL']);
         },
+        async getPublicUserByUsername(username) {
+            return await UserModel
+                                .findOne({ username })
+                                .lean()
+                                .select(['username', 'name', 'profilePicURL']);
+        },
+        async fetchPublicUser(username, params) {
+            const user = await US.getPublicUserByUsername(username);
+            const mutualFriends = await FS.getPopulatedMutualFriends(username, params);
+            user.mutualFriends = mutualFriends;
+            return user;
+        },
         async getFriends(params) {
             const user = await UserModel
                                 .findOne({ username: params.user.username.toLowerCase() })

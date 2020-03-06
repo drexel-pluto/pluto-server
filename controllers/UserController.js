@@ -256,4 +256,38 @@ router.get('/notifications', authorizeUser, (req, res) => {
     })();
 });
 
+router.get('/public/:username', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                username: req.params.username
+            }
+            const user = await PlutoServices.US.fetchPublicUser(params.username, params);
+            return res.status(200).send(user);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
+router.get('/:username/mutual-friends', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                username: req.params.username
+            }
+            const user = await PlutoServices.FS.getPopulatedMutualFriends(params.username, params);
+            return res.status(200).send(user);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 module.exports = router;
