@@ -3,7 +3,7 @@ const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
 require('mdn-polyfills/Number.isInteger');
 
-const PUBLIC_POST_SELECTION = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt', '_id', 'tags'];
+const PUBLIC_POST_SELECTION = ['mediaURLs', 'poster', 'text', 'comments', 'likes', 'postedAt', '_id', 'tags', 'isLiked'];
 
 module.exports = () => {
     var US, PS, FS, GS, IS, CS;
@@ -270,7 +270,8 @@ module.exports = () => {
 
             // Hydrate with populated data
             const hydratedPosts = await PS.hydrateEmptyPosts(filteredPosts, params);
-            const postsWithComments = await PS.preparePostsCommentSection(hydratedPosts, params);
+            const postsWithIsLikedProperty = await PS.addIsLikedProperty(hydratedPosts, params);
+            const postsWithComments = await PS.preparePostsCommentSection(postsWithIsLikedProperty, params);
 
             // Sanitize out sensitive / non-display information
             const sanitizedPosts = await PS.sanitizePostsInfo(postsWithComments, params);
@@ -372,6 +373,15 @@ module.exports = () => {
             const tagObjs = params.tags;
             const rawTags = tagObjs.map(tag => tag.name);
             return rawTags;
+        },
+        async addIsLikedProperty(posts, params) {
+            return posts.map(post => {
+                const likerStrings = post.likers.map(likers => likers._id.toString());
+                const likersSet = new Set(likerStrings);
+                const isLiked = likersSet.has(params.user._id.toString());
+                post.isLiked = isLiked;
+                return post;
+            });
         }
     }
 }
