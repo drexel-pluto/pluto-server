@@ -32,12 +32,13 @@ module.exports = () => {
             await UserModel.findOneAndUpdate(filter, update, { new: true });
             return newGroup;
         },
-        async addUserToGroup(params) {
+        async addUsersToGroup(params) {
             const user = await US.getUser(params.user.username);
             params.user = user;
-
-            const good = await FS.ensureFriends(params.user, params.friendToAdd);
-            return await GS.pushUserToGroup(params);
+            await Promise.all(params.friendsToAdd.map(async friend => {
+                await FS.ensureFriends(user, friend);
+            }));
+            return await GS.pushManyUsersToGroup(params);
         },
         async deleteGroup(params) {
             const filter = { _id: params.user._id }
@@ -51,8 +52,17 @@ module.exports = () => {
         async pushUserToGroup(params) {
             const filter = { _id: params.groupId }
             const update = { $addToSet: {
-                members : params.friendToAdd,
-                memberIds: params.friendToAdd
+                members : params.friendId,
+                memberIds: params.friendId
+            }}
+            const group = await GroupModel.findOneAndUpdate(filter, update, { new: true });
+            return group;
+        },
+        async pushManyUsersToGroup(params) {
+            const filter = { _id: params.groupId }
+            const update = { $addToSet: {
+                members : params.friendsToAdd,
+                memberIds: params.friendsToAdd
             }}
             const group = await GroupModel.findOneAndUpdate(filter, update, { new: true });
             return group;
@@ -62,6 +72,15 @@ module.exports = () => {
             const update = { $pull: {
                 members : params.friendToRemove,
                 memberIds: params.friendToRemove
+            }}
+            const group = await GroupModel.findOneAndUpdate(filter, update, { new: true });
+            return group;
+        },
+        async pullManyUsersFromGroup(params) {
+            const filter = { _id: params.groupId }
+            const update = { $pull: {
+                members : { $in: params.friendsToRemove },
+                memberIds: { $in: params.friendsToRemove }
             }}
             const group = await GroupModel.findOneAndUpdate(filter, update, { new: true });
             return group;

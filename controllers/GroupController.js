@@ -31,9 +31,9 @@ router.post('/members/add', (req, res) => {
             const params = {
                 user: req.user,
                 groupId: req.body.groupId,
-                friendToAdd: req.body.friendToAdd
+                friendsToAdd: req.body.friendsToAdd
             }
-            const group = await PlutoServices.GS.addUserToGroup(params);
+            const group = await PlutoServices.GS.addUsersToGroup(params);
             return res.status(200).send(group);
         }
         catch (err) {
@@ -49,9 +49,9 @@ router.post('/members/remove', (req, res) => {
             const params = {
                 user: req.user,
                 groupId: req.body.groupId,
-                friendToRemove: req.body.friendToRemove
+                friendsToRemove: req.body.friendsToRemove
             }
-            const group = await PlutoServices.GS.pullUserFromGroup(params);
+            const group = await PlutoServices.GS.pullManyUsersFromGroup(params);
             return res.status(200).send(group);
         }
         catch (err) {
