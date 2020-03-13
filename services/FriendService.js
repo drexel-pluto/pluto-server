@@ -113,7 +113,6 @@ module.exports = () => {
             return friendSet.has(possibleFriendID.toString());
         },
         async ensureFriends(userObj, possibleFriendID, _params) {
-            console.log('ensureFriends: ', userObj._id, possibleFriendID);
             // Pass if user is self
             if (userObj._id == possibleFriendID) { return }
             const friends = userObj.friendIds;

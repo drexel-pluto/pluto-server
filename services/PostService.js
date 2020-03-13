@@ -112,10 +112,10 @@ module.exports = () => {
             return await PostModel.findByIdAndDelete(params.postId);
         },
         async fetchPost(params) {
-            console.log('fetch post: ', params);
+            const freshUser = await US.getUserById(params.user._id);
             await PS.ensurePostIsInCollector(params);
             const post = await PostModel.findById(params.postId);
-            await FS.ensureFriends(params.user, post.poster._id);
+            await FS.ensureFriends(freshUser, post.poster._id);
             const preparedPost = await PS.getPostForDelivery(post, params);
             return preparedPost;
         },
