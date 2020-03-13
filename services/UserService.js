@@ -170,6 +170,7 @@ module.exports = () => {
             return user.friendRequestsSent;
         },
         async fetchAUser(params) {
+            console.log('fetch a user: ', params);
             if (!isEmpty(params.userId)) {
                 await FS.ensureFriends(params.user, params.userId);
                 const user = await US.getUserById(params.userId);
