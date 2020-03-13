@@ -3,6 +3,7 @@ const { isEmpty } = require('./helpers');
 
 module.exports = {
     async buildError(status, ctrl, route, msg){
+        console.log(msg);
         const errorObj = {
             errMessage: msg,
             errCode: status,
