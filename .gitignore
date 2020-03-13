@@ -65,3 +65,5 @@ typings/
 test_ids.txt
 
 /secret
+
+.vscode
