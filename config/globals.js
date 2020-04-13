@@ -1,4 +1,4 @@
-module.exports = {
+const globals = {
     maxNumberOfFriendsAllowed: 50,
     getRandomDefaultPic: function() {
         function getRandomInt(min, max) {
@@ -7,7 +7,7 @@ module.exports = {
             return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
         }
         const rand = getRandomInt(0, 2);
-        return this.defaultPics[rand];
+        return globals.defaultPics[rand];
     },
     defaultPics: [
         "https://storage.googleapis.com/pluto-social-images/1583442630837female_avatar.jpg",
@@ -19,3 +19,5 @@ module.exports = {
     },
     acceptedFiletypes: ['image/png', 'image/jpg', 'image/jpeg', 'image/heif', 'image/heic']
 }
+
+module.exports = globals;

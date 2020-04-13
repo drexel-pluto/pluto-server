@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const globals = require('../config/globals');
 
 const UserSchema = new Schema({
     email: {
@@ -102,7 +103,7 @@ const UserSchema = new Schema({
     },
     profilePicURL: {
         type: String,
-        default: ''
+        default: globals.getRandomDefaultPic
     },
     notificationCollector: {
         type: Schema.Types.ObjectId,
