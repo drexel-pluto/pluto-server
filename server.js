@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const mongoose = require('mongoose');
 const { fileParser } = require('express-multipart-file-parser');
+const globals = require('./config/globals');
 
 const port = process.env.PORT || 3555;
 const app = express();
@@ -87,7 +88,7 @@ passport.use(localStrategy);
 
 const localAuth = passport.authenticate('local', { session: false, failWithError: false });
 app.post('/api/login', localAuth, (req, res) => {
-  const options = { expiresIn: '1d' };
+  const options = { expiresIn: globals.tokenExpiration };
   const payload = { user: req.user };
   const authToken = jwt.sign(payload, process.env.AUTH_SECRET, options);
   res.json({ authToken });

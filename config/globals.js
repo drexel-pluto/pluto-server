@@ -1,4 +1,5 @@
 const globals = {
+    tokenExpiration: '365d',
     maxNumberOfFriendsAllowed: 50,
     getRandomDefaultPic: function() {
         function getRandomInt(min, max) {
