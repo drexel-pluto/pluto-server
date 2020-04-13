@@ -22,7 +22,7 @@ module.exports = () => {
             await PuS.addToEmailList(params);
             await US.ensureNoMoreThanOneMedia(params);
 
-            params.profilePicURL = await IS.uploadMedia(params.files);
+            params.profilePicURL = await IS.uploadMedia(params.files, true);
 
             params.hashedPass = await US.encryptPassword(params);
 
@@ -273,7 +273,7 @@ module.exports = () => {
 
             // Get the URL if a file was sent
             const newValue = (params.files)
-                ? await IS.uploadMedia(params.files)
+                ? await IS.uploadMedia(params.files, true)
                 : '';
 
             params.field = 'profilePicURL';

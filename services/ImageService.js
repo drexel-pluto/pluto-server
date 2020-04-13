@@ -1,4 +1,7 @@
 const { Storage } = require('@google-cloud/storage');
+const globals = require('../config/globals');
+const sharp = require("sharp");
+const path = require('path');
 
 // Link to json file gcloud provides
 const keys = JSON.parse(process.env.GCLOUD);
@@ -37,29 +40,21 @@ module.exports = () => {
 
         // Returns single string if only one file is sent
         // Returns array of strings if multiple media sent
-        async uploadMedia(files) {
+        async uploadMedia(files, isProfile=false) {
             if (!files) {
                 return [];
-            }
-
-            if (files.length === 1) {
-                return new Promise((resolve, reject) => {
-                    IS.sendUploadToGCS(files[0]).then(url => {
-                        resolve(url);
-                    }).catch(err => {
-                        reject(err);
-                    });
-                });
             }
 
             if (files.length >= 1) {
                 const mediaMap = files.map(file => {
                     return new Promise((resolve, reject) => {
-                        IS.sendUploadToGCS(file).then(url => {
-                            resolve(url);
-                        }).catch(err => {
-                            reject(err);
-                        });
+                        IS.resize(file, isProfile)
+                            .then((file) => IS.sendUploadToGCS(file))
+                            .then(url => {
+                                resolve(url);
+                            }).catch(err => {
+                                reject(err);
+                            });
                     });
                 });
 
@@ -101,8 +96,34 @@ module.exports = () => {
                         });
                     });
                 });
-            
                 stream.end(passedFile.buffer);
+            });
+        },
+        resize (passedFile, isProfile=false) {
+            let config = {
+                width: globals.imageSizes.content,
+                position: sharp.strategy.entropy,
+                withoutEnlargement: true
+            };
+
+            if (isProfile) {
+                //square ratio for profile pictures
+                config.fit = sharp.fit.cover;
+                config.width = globals.imageSizes.profile
+                config.height = globals.imageSizes.profile
+            }
+
+            return new Promise((resolve, reject) => {
+                sharp(passedFile.buffer)
+                    .resize(config)
+                    .toFormat('jpeg')
+                    .toBuffer()
+                    .then(function(outputBuffer) {
+                        // rename from old filename
+                        passedFile.originalname = path.parse(passedFile.originalname).name + ".jpeg";
+                        passedFile.buffer = outputBuffer;
+                        resolve(passedFile);
+                    });
             });
         },
         async deleteFile(url) {

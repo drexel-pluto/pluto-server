@@ -12,5 +12,9 @@ module.exports = {
     defaultPics: [
         "https://storage.googleapis.com/pluto-social-images/1583442630837female_avatar.jpg",
         "https://storage.googleapis.com/pluto-social-images/1583442630856male_avatar.jpg"
-    ]
+    ],
+    imageSizes: {
+        profile: 500,
+        content: 1080
+    }
 }
