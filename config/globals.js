@@ -16,5 +16,6 @@ module.exports = {
     imageSizes: {
         profile: 500,
         content: 1080
-    }
+    },
+    acceptedFiletypes: ['image/png', 'image/jpg', 'image/jpeg', 'image/heif', 'image/heic']
 }

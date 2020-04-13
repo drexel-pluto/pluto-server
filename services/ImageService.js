@@ -2,6 +2,7 @@ const { Storage } = require('@google-cloud/storage');
 const globals = require('../config/globals');
 const sharp = require("sharp");
 const path = require('path');
+const Helpers = require('../services/helpers');
 
 // Link to json file gcloud provides
 const keys = JSON.parse(process.env.GCLOUD);
@@ -29,6 +30,8 @@ const multer = Multer({
     }
 });
 
+const acceptedFileTypes = globals.acceptedFiletypes;
+
 module.exports = () => {
     var IS;
     return {
@@ -38,12 +41,13 @@ module.exports = () => {
 
 
 
-        // Returns single string if only one file is sent
-        // Returns array of strings if multiple media sent
+        // Returns array of URL strings
         async uploadMedia(files, isProfile=false) {
             if (!files) {
                 return [];
             }
+
+            await IS.ensureValidFiletypes(files);
 
             if (files.length >= 1) {
                 const mediaMap = files.map(file => {
@@ -139,6 +143,16 @@ module.exports = () => {
         },
         async getFilename(url) {
             return url.split('/')[4];
+        },
+        async ensureValidFiletypes(files) {
+            return await Promise.all(files.map(async file => {
+                const fileExt = file.mimetype;
+                if (!Helpers.contains.call(acceptedFileTypes, fileExt.toString())) {
+                    return Promise.reject(`Bad file type: ${fileExt}`);
+                } else {
+                    return fileExt;
+                }
+            }));
         }
     }
 }
