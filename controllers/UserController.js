@@ -10,7 +10,6 @@ if (typeof PlutoServices.init === "function") {
     PlutoServices.init();
 }
 
-
 router.post('/create', (req, res) => {
     ( async () => {
         try {

@@ -88,7 +88,7 @@ module.exports = () => {
         async saveUser(params) {
             return UserModel.create({
                 username: params.username.toLowerCase(),
-                email: params.email,
+                email: params.email.toLowerCase(),
                 password: params.hashedPass,
                 name: params.name,
                 gender: params.gender,
@@ -99,7 +99,9 @@ module.exports = () => {
         },
         // returns user if valid, returns false if not
         async isValidUserCredentials(params) {
-            const user = await UserModel.findOne({username: params.username.toLowerCase()}).lean();
+            const enteredValue = params.username.toLowerCase();
+            const user = await UserModel.findOne({ $or: [{ username: enteredValue }, { email: enteredValue }] }).lean();
+            if (user === null) { return Promise.reject('No user found with that username or email.') }
             return bcrypt.compare(params.password, user.password).then(res => {
                 if (res) {
                     return user;
