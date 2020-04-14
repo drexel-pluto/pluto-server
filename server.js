@@ -1,16 +1,39 @@
+//
+// Generic Imports
+//
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const mongoose = require('mongoose');
 const { fileParser } = require('express-multipart-file-parser');
 const globals = require('./config/globals');
+const { contains } = require('./services/helpers');
+
+
+
+
+
+
+
+//
+// Initialize express
+//
 
 const port = process.env.PORT || 3555;
 const app = express();
 require('dotenv').config();
 
 
-//Database configuration
+
+
+
+
+
+// 
+// Database configuration
+//
+
 const db = process.env.DB;
 const mongooseOpts = {
   useNewUrlParser: true,
@@ -19,16 +42,29 @@ const mongooseOpts = {
   useFindAndModify: false
 };
 
-//Connect to database
+
+
+
+
+
+
+//
+// Connect to database
+//
+
 mongoose.connect(db, mongooseOpts)
     .then(() => console.log('MongoDB Connected...'))
     .catch(err => console.log(err));
 
-// ---
-// Utilities
-// ---
 
-// Serve static files from the React frontend app
+
+
+
+
+
+//
+// Initialize Client, BodyParser, and FileParser
+//
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'client/')));
 app.use(fileParser({
@@ -38,15 +74,31 @@ app.use(fileParser({
 }));
 
 
+
+
+
+
+
+//
 // Initialize Pluto services
+//
+
 const PlutoServices = require('./services/PlutoServices');
-// Makes sure the services havent been initialized
+// Ensure the services havent been initialized
 if (typeof PlutoServices.init === "function") { 
     PlutoServices.init();
 }
 
 
-// Passport setup
+
+
+
+
+
+//
+// Initialize Passport
+//
+
 const passport = require('passport');
 const { Strategy: LocalStrategy } = require('passport-local');
 const jwtPassport = require('passport-jwt');
@@ -55,13 +107,22 @@ const ExtractJwt = jwtPassport.ExtractJwt;
 const jwt = require('jsonwebtoken');
 app.use(passport.initialize());
 
-const { contains } = require('./services/helpers');
+
+
+
+
+
+
+//
+// Initialize local strategy for passport
+//
+
 const localStrategy =  new LocalStrategy((username, password, done) => {
   (async() => {
     try {
         const params = { username, password };
 
-        // Find and authenticate user based on `username` and `password`
+        // Custom credentials verification in the user service
         let user = await PlutoServices.US.isValidUserCredentials(params);
 
         if (user) {
@@ -86,6 +147,16 @@ const localStrategy =  new LocalStrategy((username, password, done) => {
 });
 passport.use(localStrategy);
 
+
+
+
+
+
+
+//
+// Setup login route using localAuth
+//
+
 const localAuth = passport.authenticate('local', { session: false, failWithError: false });
 app.post('/api/login', localAuth, (req, res) => {
   const options = { expiresIn: globals.tokenExpiration };
@@ -93,6 +164,16 @@ app.post('/api/login', localAuth, (req, res) => {
   const authToken = jwt.sign(payload, process.env.AUTH_SECRET, options);
   res.json({ authToken });
 });
+
+
+
+
+
+
+
+//
+// Initialize JSON Web Token setup for passport
+//
 
 const jwtStrategy = new JwtStrategy({
   secretOrKey: process.env.AUTH_SECRET,
@@ -103,14 +184,32 @@ const jwtStrategy = new JwtStrategy({
 });
 passport.use(jwtStrategy);
 
+
+
+
+
+
+
+//
+// Middleware to authenticate routes, using JWT authentication
+//
+
 const authorizeUser = passport.authenticate('jwt', { session: false, failWithError: false });
 
+
+
+
+
+
+
+//
+// Initialize controllers
+//
 
 app.get('/logout', (req, res) => {
   req.logout();
   res.redirect('/');
 });
-
 app.use('/api/user/groups', authorizeUser, require('./controllers/GroupController'));
 app.use('/api/posts', authorizeUser, require('./controllers/PostController'));
 app.use('/api/user', require('./controllers/UserController'));
@@ -123,5 +222,13 @@ app.get('/*', (req, res) => {
 });
 
 
+
+
+
+
+
+//
+// Initialization finished
+//
 
 app.listen(port, () => console.log(`Server runnning on port ${port}!`));
