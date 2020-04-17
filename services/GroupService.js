@@ -1,6 +1,6 @@
 const UserModel = require('../models/User');
 const GroupModel = require('../models/Group');
-const { asyncForEach } = require('./helpers');
+const { contains, asyncForEach } = require('./helpers');
 
 
 // Groups are unidirectional
@@ -136,6 +136,23 @@ module.exports = () => {
             return await GroupModel
                             .findOne(filter)
                             .lean();
+        },
+        async pullUserFromAllGroups(friendId, params) {
+            params.friendToRemove = friendId;
+            const groups = await GS.getGroups(params);
+            const newGroups = await Promise.all(groups.map(async group => {
+                const isInGroup = await GS.isGroupMember(friendId, group);
+                if (isInGroup) {
+                    params.groupId = group._id;
+                    await GS.pullUserFromGroup(params);
+                }
+            }));
+            return newGroups;
+        },
+        async isGroupMember(id, groupObj) {
+            if (contains.call(groupObj.memberIds, id.toString())) {
+                return true;
+            }
         }
     }
 }

@@ -107,7 +107,7 @@ router.post('/friends/remove', authorizeUser, (req, res) => {
         try {
             const params = {
                 user: req.user,
-                username: req.body.username
+                friendId: req.body.friendId
             }
             const friendRequestRemoval = await PlutoServices.FS.handleFriendRemoval(params);
             return res.status(200).send(friendRequestRemoval);

@@ -407,6 +407,16 @@ module.exports = () => {
 
             const posts = await PS.fetchPosts(filterFunction, params);
             return posts;
+        },
+        async removeAllPostsFromUser(friendId, params) {
+            const posts = await PS.getAllEmptyPosts(params);
+            const newPosts = await Promise.all(posts.map(async post => {
+                if (post.poster.toString() !== friendId.toString()) {
+                    return post;
+                }
+            }));
+            return newPosts;
+
         }
     }
 }

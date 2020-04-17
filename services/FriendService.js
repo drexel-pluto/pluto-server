@@ -2,11 +2,13 @@ const UserModel = require('../models/User');
 const friendCap = require('../config/globals').maxNumberOfFriendsAllowed;
 
 module.exports = () => {
-    var NS, US, FS;
+    var GS, NS, US, FS, PS;
     return {
         initialize(){
+            GS = this.parent.GS;
             NS = this.parent.NS;
             US = this.parent.US;
+            PS = this.parent.PS;
             FS = this;
         },
         async sendRequest(params) {
@@ -124,10 +126,16 @@ module.exports = () => {
             }
         },
         async handleFriendRemoval(params) {
-            // TO DO -- remove unfriended person's posts from collector
-            params.friendToRemove = await US.getUser(params.username);
-            await FS.removeFriend(params.friendToRemove._id, params.user._id);
-            return await FS.removeFriend(params.user._id, params.friendToRemove._id);
+            await FS.ensureFriends(params.user, params.friendId, params);
+
+            // Remove unfriended person's posts from collector
+            await PS.removeAllPostsFromUser(params.friendId, params);
+
+            // Remove from groups
+            await GS.pullUserFromAllGroups(params.friendId, params);
+
+            await FS.removeFriend(params.friendId, params.user._id);
+            return await FS.removeFriend(params.user._id, params.friendId);
         },
         async removeFriend(partyA, partyB, _params) {
             const filter = { _id: partyA }
