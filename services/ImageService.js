@@ -49,6 +49,19 @@ module.exports = () => {
 
             await IS.ensureValidFiletypes(files);
 
+            // if just one file, return single string
+            if (files.length === 1) {
+                return new Promise((resolve, reject) => {
+                    IS.resize(files[0], isProfile)
+                        .then((file) => IS.sendUploadToGCS(file))
+                        .then(url => {
+                            resolve(url);
+                        }).catch(err => {
+                            reject(err);
+                        });
+                });
+            }
+
             if (files.length >= 1) {
                 const mediaMap = files.map(file => {
                     return new Promise((resolve, reject) => {
