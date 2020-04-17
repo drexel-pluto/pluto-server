@@ -92,6 +92,7 @@ module.exports = () => {
                 password: params.hashedPass,
                 name: params.name,
                 gender: params.gender,
+                bio: params.bio,
                 feedCollector: params.feedAggregator,
                 profilePicURL: params.profilePicURL,
                 notificationCollector: params.notificationCollector
