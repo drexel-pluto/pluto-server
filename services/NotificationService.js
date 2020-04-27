@@ -1,11 +1,16 @@
 const NCModel = require('../models/UserNotificationCollector');
 const NotificationModel = require('../models/Notification');
 const globals = require('../config/globals');
+const { Expo } = require('expo-server-sdk');
+
+// Create a new Expo SDK client for push notifications
+let expo = new Expo();
 
 module.exports = () => {
-    var NS;
+    var NS, US;
     return {
         initialize(){
+            US = this.parent.US;
             NS = this;
         },
         async sendNotification(params) {
@@ -16,6 +21,25 @@ module.exports = () => {
                 from: params.notificationFrom,
                 showUser: params.showUser
             });
+
+            // send push notification if recipient != sender 
+            if (params.notificationFrom !== params.notificationFor) {
+                const user = await US.getUserById(params.notificationFor);
+                const pushToken = user.expoPushToken;
+
+                // make sure recipient has a pushtoken
+                if (Expo.isExpoPushToken(pushToken)) {
+
+                    let message = {
+                        to: pushToken,
+                        body: params.notificationText
+                    }
+                    console.log(message);
+                    let ticket = await expo.sendPushNotificationsAsync([message]);
+
+                    console.log(ticket);
+                }
+            }
 
             const usersNotificationCollector = await NS.getNotifcationCollectorId(params.notificationFor);
             const query = usersNotificationCollector;

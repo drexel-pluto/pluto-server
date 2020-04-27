@@ -289,4 +289,23 @@ router.get('/:username/mutual-friends', authorizeUser, (req, res) => {
     })();
 });
 
+router.post('/pushtoken', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                field: "expoPushToken",
+                newValue: req.body.token
+            }
+            const user = await PlutoServices.US.updateUserProfile(params);
+
+            return res.status(200).send(user);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', '/pushtoken', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 module.exports = router;
