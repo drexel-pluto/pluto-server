@@ -34,10 +34,8 @@ module.exports = () => {
                         to: pushToken,
                         body: params.notificationText
                     }
-                    console.log(message);
-                    let ticket = await expo.sendPushNotificationsAsync([message]);
 
-                    console.log(ticket);
+                    await expo.sendPushNotificationsAsync([message]);
                 }
             }
 
