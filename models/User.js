@@ -108,6 +108,10 @@ const UserSchema = new Schema({
     notificationCollector: {
         type: Schema.Types.ObjectId,
         ref: 'UserNotificationCollector'
+    },
+    expoPushToken: {
+        type: String,
+        default: ""
     }
 });
 

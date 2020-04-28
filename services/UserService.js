@@ -207,7 +207,7 @@ module.exports = () => {
             return await UserModel.findOneAndUpdate(filter, update, { new: true });
         },
         async ensureEditableProfileField(params) {
-            const acceptableFields = new Set(['birthday', 'bio', 'name', 'gender', 'profilePicURL']);
+            const acceptableFields = new Set(['birthday', 'bio', 'name', 'gender', 'profilePicURL', 'expoPushToken']);
             if (!acceptableFields.has(params.field)){
                 return Promise.reject(`Requested field (${params.field}) is not editable through this endpoint.`);
             }
