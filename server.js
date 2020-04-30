@@ -218,6 +218,7 @@ app.use('/api/public', require('./controllers/PublicController'));
 // Redirect to homepage if not accessing API
 // If anything above doesnt hit, this will get called
 app.get('/*', (req, res) => {
+  console.log(`User attempting to hit ${req.originalUrl}`);
   res.redirect('https://plutosocial.io');
 });
 
