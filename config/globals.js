@@ -11,8 +11,8 @@ const globals = {
         return globals.defaultPics[rand];
     },
     defaultPics: [
-        "https://storage.googleapis.com/pluto-social-images/1583442630837female_avatar.jpg",
-        "https://storage.googleapis.com/pluto-social-images/1583442630856male_avatar.jpg"
+        "https://storage.googleapis.com/pluto-social-images/1588260460805female_avatar.jpeg",
+        "https://storage.googleapis.com/pluto-social-images/1588260512771male_avatar.jpeg"
     ],
     imageSizes: {
         profile: 500,

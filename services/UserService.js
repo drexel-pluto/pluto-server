@@ -4,6 +4,8 @@ const NotificationCollectorModel = require('../models/UserNotificationCollector'
 const { isEmpty, contains } = require('./helpers');
 const bcrypt = require('bcryptjs');
 
+const { defaultPics } = require('../config/globals');
+
 module.exports = () => {
     var US, FS, GS, PS, IS, PuS;
     return {
@@ -266,10 +268,7 @@ module.exports = () => {
             // Refresh user object
             params.user = await US.getUser(params.user.username);
 
-            // HOTFIX
-            // DELETING PROFILE PIC NEEDS FIXING
-            // Attempting to delete the default profile pic causes crashing
-            // await US.conditionalRemoveProfilePicture(params);
+            await US.conditionalRemoveProfilePicture(params);
             await US.ensureNoMoreThanOneMedia(params);
 
             // Return user object if no needed update
@@ -289,9 +288,15 @@ module.exports = () => {
         },
         async conditionalRemoveProfilePicture(params) {
             const profilePicURL = params.user.profilePicURL;
+
+            if (params.user.profilePicURL === defaultPics[0] || params.user.profilePicURL === defaultPics[1]) {
+                return;
+            }
+
             if (!isEmpty(profilePicURL)) {
                 return await US.deleteProfilePicture(params);
             }
+
             return;
         },
         async getPosterById(id, params) {
