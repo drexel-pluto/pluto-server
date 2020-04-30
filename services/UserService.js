@@ -266,7 +266,10 @@ module.exports = () => {
             // Refresh user object
             params.user = await US.getUser(params.user.username);
 
-            await US.conditionalRemoveProfilePicture(params);
+            // HOTFIX
+            // DELETING PROFILE PIC NEEDS FIXING
+            // Attempting to delete the default profile pic causes crashing
+            // await US.conditionalRemoveProfilePicture(params);
             await US.ensureNoMoreThanOneMedia(params);
 
             // Return user object if no needed update
