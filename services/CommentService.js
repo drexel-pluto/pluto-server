@@ -152,6 +152,37 @@ module.exports = () => {
             }
             await NS.sendNotification(notificationObj);
             return;
+        },
+        async fetchComment({ postId, commentId }) {
+            const params = { postId }
+            const post = await PS.fetchRawPost(params);
+            const comments = post.comments;
+            const comment = comments.filter(comment => comment._id == commentId);
+            if (isEmpty(comment)) { return Promise.reject('Could not fetch comment.') }
+            return comment[0];
+        },
+        async fetchCommentFromComments({ commentsObj, commentId }) {
+            const comment = commentsObj.filter(comment => comment._id == commentId);
+            if (isEmpty(comment)) { return Promise.reject('Could not fetch comment.') }
+            return comment[0];
+        },
+        async fetchRawComments({ postId }) {
+            const params = { postId }
+            const post = await PS.fetchRawPost(params);
+            return post.comments;
+        },
+        async ensureCommentOwner({ commentObj, user }) {
+            if (commentObj.poster.toString() !== user._id.toString()) { return Promise.reject('Only comment owners can delete their comments.') }
+            return;
+        },
+        async deleteCommentOnPost(params) {
+            const comments = await CS.fetchRawComments({ postId: params.postId, commentId: params.commentId });
+            const comment = await CS.fetchCommentFromComments({ commentsObj: comments, commentId: params.commentId });
+            await CS.ensureCommentOwner({ commentObj: comment, user: params.user });
+            const newComments = comments.filter(comment => comment._id.toString() !== params.commentId.toString());
+            params.newComments = newComments;
+            const post = await PS.updateComments(params);
+            return post;
         }
     }
 }
