@@ -4,6 +4,8 @@ const NotificationCollectorModel = require('../models/UserNotificationCollector'
 const { isEmpty, contains } = require('./helpers');
 const bcrypt = require('bcryptjs');
 
+const { defaultPics } = require('../config/globals');
+
 module.exports = () => {
     var US, FS, GS, PS, IS, PuS;
     return {
@@ -286,9 +288,15 @@ module.exports = () => {
         },
         async conditionalRemoveProfilePicture(params) {
             const profilePicURL = params.user.profilePicURL;
+
+            if (params.user.profilePicURL === defaultPics[0] || params.user.profilePicURL === defaultPics[1]) {
+                return;
+            }
+
             if (!isEmpty(profilePicURL)) {
                 return await US.deleteProfilePicture(params);
             }
+
             return;
         },
         async getPosterById(id, params) {

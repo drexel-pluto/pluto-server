@@ -17,9 +17,10 @@ module.exports = () => {
             params.user = await US.getUser(params.user.username);
             params.requestedUser = await US.getUser(params.username);
 
-            await FS.makeSureArentAlreadyFriends(params);
+            await FS.ensureArentAlreadyFriends(params);
             await FS.hasFriendCapBeenReached(params);
-            await FS.makeSureRequestIsntPending(params);
+            await FS.ensureRequestIsntPending(params);
+            await FS.ensureRequestIsntWaitingResponse(params);
             await FS.sendRequestNotification(params);
 
             await FS.addReceivedRequestToUser(params);
@@ -76,18 +77,33 @@ module.exports = () => {
             if (senderFriendCount > friendCap) { return Promise.reject('Maximum number of friends reached.'); }
             return;
         },
-        // SLOW
-        async makeSureRequestIsntPending(params) {
+        async ensureRequestIsntPending(params) {
             const user = await US.getUserById(params.user._id);
             const requests = user.friendRequestsSent;
-            return new Promise((resolve, reject) => {
-                requests.forEach(request => {
+
+            return await Promise.all(requests.map(async request => {
+                return new Promise((resolve, reject) => {
                     if (request.to.toString() == params.requestedUser._id.toString()) {
                         reject('Friend request already sent. Waiting on their response.');
+                    } else {
+                        resolve();
                     }
                 });
-                resolve();
-            });
+            }));
+        },
+        async ensureRequestIsntWaitingResponse(params) {
+            const user = await US.getUserById(params.user._id);
+            const requests = user.friendRequestsReceived;
+
+            return await Promise.all(requests.map(async request => {
+                return new Promise((resolve, reject) => {
+                    if (request.from.toString() == params.requestedUser._id.toString()) {
+                        reject('You already have a friend request from this person.');
+                    } else {
+                        resolve();
+                    }
+                });
+            }));
         },
         async addFriend(partyA, partyB, _params) {
             const friendObj = { friend: partyB }
@@ -100,7 +116,7 @@ module.exports = () => {
             }
             return await UserModel.findOneAndUpdate(filter, update, { new: true });
         },
-        async makeSureArentAlreadyFriends(params) {
+        async ensureArentAlreadyFriends(params) {
             const friends = params.user.friendIds;
             const friendSet = new Set(friends);
             if (friendSet.has(params.requestedUser._id.toString())) {

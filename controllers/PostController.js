@@ -204,6 +204,24 @@ router.get('/:tag', (req, res) => {
     })();
 });
 
+router.delete('/comment', (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                postId: req.body.postId,
+                commentId: req.body.commentId
+            }
+            const post = await PlutoServices.CS.deleteCommentOnPost(params);
+            return res.status(200).send(post);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', req.originalUrl, err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 
 
 module.exports = router;

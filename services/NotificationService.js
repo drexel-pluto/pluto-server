@@ -31,7 +31,6 @@ module.exports = () => {
 
                 // make sure recipient has a pushtoken
                 if (Expo.isExpoPushToken(pushToken)) {
-
                     let message = {
                         to: pushToken,
                         body: params.notificationText,
