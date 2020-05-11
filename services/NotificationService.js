@@ -14,12 +14,14 @@ module.exports = () => {
             NS = this;
         },
         async sendNotification(params) {
-            // params.notificationFor | params.notificationText | params.notificationFrom
+            // params.notificationFor | params.notificationText | params.notificationFrom | params.notificationType
             params.showUser = (params.showUser) ? params.showUser : false;
             const notification = new NotificationModel({
                 text: params.notificationText,
                 from: params.notificationFrom,
-                showUser: params.showUser
+                showUser: params.showUser,
+                postId: params.postId,
+                type: params.notificationType
             });
 
             // send push notification if recipient != sender 
@@ -31,7 +33,13 @@ module.exports = () => {
                 if (Expo.isExpoPushToken(pushToken)) {
                     let message = {
                         to: pushToken,
-                        body: params.notificationText
+                        body: params.notificationText,
+                        data: {
+                            body: params.notificationText,
+                            postId: params.postId,
+                            fromId: params.notificationFrom,
+                            type: params.notificationType
+                        }
                     }
 
                     await expo.sendPushNotificationsAsync([message]);

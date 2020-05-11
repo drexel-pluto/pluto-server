@@ -163,6 +163,7 @@ module.exports = () => {
                 notificationFor: params.requestedUser._id,
                 notificationFrom: params.user._id,
                 notificationText: `${params.user.name} added you as a friend!`,
+                notificationType: "recieveFriendReq",
                 showUser: true
             }
             await NS.sendNotification(notificationObj);
@@ -172,6 +173,7 @@ module.exports = () => {
                 notificationFor: params.sender._id,
                 notificationFrom: params.receiver._id,
                 notificationText: `${params.receiver.name} confirmed your friend request.`,
+                notificationType: "confirmFriendReq",
                 showUser: true
             }
             await NS.sendNotification(notificationObj);
