@@ -14,6 +14,22 @@ const NotificationSchema = new Schema({
     showUser: {
         type: Boolean,
         default: false
+    },
+    postId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Post',
+        default: null
+    },
+    type: {
+        type: String,
+        enum: [
+            "recieveFriendReq",
+            "confirmFriendReq",
+            "comment"
+        ],
+        required: true,
+        default: "friendReq"
+
     }
 });
 

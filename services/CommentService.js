@@ -34,7 +34,9 @@ module.exports = () => {
                 notificationFor: post.poster,
                 notificationFrom: params.user._id,
                 notificationText: `${params.user.name} commented on your post`,
-                showUser: true
+                showUser: true,
+                postId: params.postId,
+                notificationType: "comment"
             }
             await NS.sendNotification(notificationObj);
 
@@ -148,7 +150,9 @@ module.exports = () => {
                 notificationFor: originalComment.poster,
                 notificationFrom: params.user._id,
                 showUser: isFriends,
-                notificationText: `${visibleName} replied to your comment`
+                notificationText: `${visibleName} replied to your comment`,
+                postId: params.postId,
+                notificationType: "comment"
             }
             await NS.sendNotification(notificationObj);
             return;
