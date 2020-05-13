@@ -182,6 +182,7 @@ module.exports = () => {
             const newComments = comments.filter(comment => comment._id.toString() !== params.commentId.toString());
             params.newComments = newComments;
             const post = await PS.updateComments(params);
+            post.comments = await CS.prepareSinglePostCommentSection(post, params);
             return post;
         }
     }
