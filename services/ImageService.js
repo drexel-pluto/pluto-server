@@ -132,6 +132,7 @@ module.exports = () => {
 
             return new Promise((resolve, reject) => {
                 sharp(passedFile.buffer)
+                    .rotate()
                     .resize(config)
                     .toFormat('jpeg')
                     .toBuffer()
