@@ -24,10 +24,11 @@ module.exports = () => {
                 text: params.text
             });
 
-            // Find and Update comment in comment model
+            await PS.addParticipant(params);
+
+            // Find and Update post in post model
             const newPost = await PS.appendComment(params);
 
-            await PS.addParticipant(params);
 
             // Let poster know somebody commented
             const notificationObj = {
@@ -65,6 +66,8 @@ module.exports = () => {
                 text: params.text
             });
 
+            await PS.addParticipant(params);
+
             // Find and Update comment in comment model
             let replyingToThisComment;
             const comments = post.comments;
@@ -77,8 +80,6 @@ module.exports = () => {
 
             params.newComments = comments;
             const newPost = await PS.updateComments(params);
-
-            await PS.addParticipant(params);
 
             // Let poster know somebody commented
             await CS.handleCommentReplyNotification(post, replyingToThisComment, params.comment, params);
