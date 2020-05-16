@@ -28,9 +28,12 @@ module.exports = () => {
             return await US.getFriendRequestsOut(params);
         },
         async confirmFriendRequest(params) {
+            
             params.receiver = await US.getUser(params.user.username);
             params.sender = await US.getUser(params.username);
 
+            await FS.ensureRequestExists(params);
+            
             await FS.removeRequestSent(params);
             await FS.removeRequestReceived(params);
 
@@ -105,6 +108,17 @@ module.exports = () => {
                 });
             }));
         },
+        async ensureRequestExists(params) {
+            const requests = params.receiver.friendRequestsReceived;
+
+            return new Promise((resolve, reject) => {
+                if (requests.some(request => request.from.toString() === params.sender._id.toString())) {
+                    resolve();
+                } else {
+                    reject('You don\'t have a friend request from this person.');
+                }
+            });
+        },
         async addFriend(partyA, partyB, _params) {
             const friendObj = { friend: partyB }
             const filter = { _id: partyA }
@@ -155,7 +169,12 @@ module.exports = () => {
         },
         async removeFriend(partyA, partyB, _params) {
             const filter = { _id: partyA }
-            const update = { $pull: { friends : { friend: partyB }}}
+            const update = { 
+                $pull: { 
+                    friends : { friend: partyB },
+                    friendIds : partyB._id
+                }
+            }
             return await UserModel.findOneAndUpdate(filter, update, { new: true });
         },
         async sendRequestNotification(params) {
