@@ -115,6 +115,7 @@ module.exports = () => {
         async fetchPost(params) {
             await PS.ensurePostIsInCollector(params);
             const freshUser = await US.getUserById(params.user._id);
+            params.user = freshUser;
             const post = await PostModel.findById(params.postId);
             await FS.ensureFriends(freshUser, post.poster._id);
             const preparedPost = await PS.getPostForDelivery(post, params);

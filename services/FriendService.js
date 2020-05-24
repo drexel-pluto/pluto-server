@@ -140,7 +140,7 @@ module.exports = () => {
         },
         async isConfirmedFriend(userObj, possibleFriendID, _params) {
             const friends = userObj.friendIds;
-            friends.push(userObj._id);
+            friends.push(userObj._id.toString());
             const friendSet = new Set(friends);
             return friendSet.has(possibleFriendID.toString());
         },
