@@ -281,11 +281,11 @@ module.exports = () => {
 
             // Filter any posts hidden by user
             const hiddenPosts = (await US.getUser(params.user.username)).hiddenPosts;
-            const nonHiddenPosts = posts.filter(post => 
+            const nonHiddenPosts = hiddenPosts ? posts.filter(post => 
                 !hiddenPosts.some(hiddenId => 
                     hiddenId.toString() == post.post
-                )
-            );
+                ) 
+            ) : posts;
 
             // Filter by meta info before population
             const filteredPosts = (filterFunction)
