@@ -1,4 +1,5 @@
 const PostModel = require('../models/Post');
+const ReportModel = require('../models/Report');
 const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
 require('mdn-polyfills/Number.isInteger');
@@ -278,10 +279,18 @@ module.exports = () => {
             // Get empty posts from feed collector
             const posts = await PS.getAllEmptyPosts(params);
 
+            // Filter any posts hidden by user
+            const hiddenPosts = (await US.getUser(params.user.username)).hiddenPosts;
+            const nonHiddenPosts = posts.filter(post => 
+                !hiddenPosts.some(hiddenId => 
+                    hiddenId.toString() == post.post
+                )
+            );
+
             // Filter by meta info before population
             const filteredPosts = (filterFunction)
-                ? await filterFunction(...params.filterVars, posts)
-                : posts;
+                ? await filterFunction(...params.filterVars, nonHiddenPosts)
+                : nonHiddenPosts;
 
             // Hydrate with populated data
             const hydratedPosts = await PS.hydrateEmptyPosts(filteredPosts, params);
@@ -418,6 +427,13 @@ module.exports = () => {
             }));
             return newPosts;
 
+        },
+        async reportPost(params) {
+            const report = await ReportModel.create({
+                reporter: params.user._id,
+                post: params.postId
+            });
+            return report;
         }
     }
 }

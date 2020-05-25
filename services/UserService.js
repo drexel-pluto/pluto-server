@@ -304,6 +304,16 @@ module.exports = () => {
                 .findById(id)
                 .select(['username', 'name', 'email', 'profilePicURL'])
                 .lean();
+        },
+        async hidePost(params) {
+            // push post id to user-specific hiddenPosts array
+            const filter = { _id: params.user._id }
+            const update = {
+                $push: {
+                    hiddenPosts : params.postId,
+                }
+            }
+            return await UserModel.findOneAndUpdate(filter, update, { new: true });
         }
     }
 }
