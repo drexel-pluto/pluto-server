@@ -102,6 +102,26 @@ router.post('/hide', (req, res) => {
     })();
 });
 
+router.post('/report', (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                postId: req.body.postId
+            }
+            console.log("REPORTING")
+            const report = await PlutoServices.PS.reportPost(params);
+            await PlutoServices.US.hidePost(params);
+            
+            return res.status(200).send(report);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'PostController', '/hide', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 router.post('/from-group', (req, res) => {
     ( async () => {
         try {

@@ -1,4 +1,5 @@
 const PostModel = require('../models/Post');
+const ReportModel = require('../models/Report');
 const UserFeedModel = require('../models/UserFeed');
 const { isEmpty, contains } = require('./helpers');
 require('mdn-polyfills/Number.isInteger');
@@ -426,6 +427,13 @@ module.exports = () => {
             }));
             return newPosts;
 
+        },
+        async reportPost(params) {
+            const report = await ReportModel.create({
+                reporter: params.user._id,
+                post: params.postId
+            });
+            return report;
         }
     }
 }
