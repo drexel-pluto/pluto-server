@@ -278,10 +278,18 @@ module.exports = () => {
             // Get empty posts from feed collector
             const posts = await PS.getAllEmptyPosts(params);
 
+            // Filter any posts hidden by user
+            const hiddenPosts = (await US.getUser(params.user.username)).hiddenPosts;
+            const nonHiddenPosts = posts.filter(post => 
+                !hiddenPosts.some(hiddenId => 
+                    hiddenId.toString() == post.post
+                )
+            );
+
             // Filter by meta info before population
             const filteredPosts = (filterFunction)
-                ? await filterFunction(...params.filterVars, posts)
-                : posts;
+                ? await filterFunction(...params.filterVars, nonHiddenPosts)
+                : nonHiddenPosts;
 
             // Hydrate with populated data
             const hydratedPosts = await PS.hydrateEmptyPosts(filteredPosts, params);

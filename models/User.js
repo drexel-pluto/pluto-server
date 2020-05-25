@@ -112,7 +112,13 @@ const UserSchema = new Schema({
     expoPushToken: {
         type: String,
         default: ""
-    }
+    },
+    hiddenPosts: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Post'
+        }
+    ]
 });
 
 const User = mongoose.model('User', UserSchema);
