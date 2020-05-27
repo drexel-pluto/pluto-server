@@ -119,6 +119,25 @@ router.post('/friends/remove', authorizeUser, (req, res) => {
     })();
 });
 
+router.post('/friends/block', authorizeUser, (req, res) => {
+    ( async () => {
+        try {
+            const params = {
+                user: req.user,
+                userId: req.body.userId
+            }
+
+            await PlutoServices.US.blockUser(params);
+            const friendRequestRemoval = await PlutoServices.FS.handleFriendRemoval(params);
+            return res.status(200).send(friendRequestRemoval);
+        }
+        catch (err) {
+            const error = await ErrorService.buildError(500, 'UserController', '/friends/block', err);
+            return res.status(500).send(error);
+        }
+    })();
+});
+
 router.get('/friends/requests-in', authorizeUser, (req, res) => {
     ( async () => {
         try {

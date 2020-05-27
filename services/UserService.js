@@ -314,6 +314,16 @@ module.exports = () => {
                 }
             }
             return await UserModel.findOneAndUpdate(filter, update, { new: true });
+        },
+        async blockUser(params) {
+            // push post id to user-specific hiddenPosts array
+            const filter = { _id: params.user._id }
+            const update = {
+                $push: {
+                    blockedUsers : params.userId,
+                }
+            }
+            return await UserModel.findOneAndUpdate(filter, update, { new: true });
         }
     }
 }

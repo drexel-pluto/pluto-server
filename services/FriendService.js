@@ -22,6 +22,7 @@ module.exports = () => {
             await FS.ensureRequestIsntPending(params);
             await FS.ensureRequestIsntWaitingResponse(params);
             await FS.sendRequestNotification(params);
+            await FS.ensureNotBlocked(params);
 
             await FS.addReceivedRequestToUser(params);
             await FS.addSentRequestToUser(params);
@@ -138,6 +139,28 @@ module.exports = () => {
             }
             return;
         },
+        async ensureNotBlocked(params) {
+
+            if (params.user.blockedUsers) {
+                const requestedUserBlocked = !params.user.blockedUsers.some(blockedUser =>
+                    blockedUser.toString() == params.requestedUser._id.toString());
+                
+                if (requestedUserBlocked) {
+                    return Promise.reject('You have blocked this user.');
+                }
+            }
+
+            if (params.requestedUser.blockedUsers) {
+                const blockedByRequestedUser = !params.requestedUser.blockedUsers.some(blockedUser =>
+                    blockedUser.toString() == params.user._id.toString());
+                
+                if (blockedByRequestedUser) {
+                    return Promise.reject('User has blocked you.');
+                }
+            }
+
+            return;
+        },
         async isConfirmedFriend(userObj, possibleFriendID, _params) {
             const friends = userObj.friendIds;
             friends.push(userObj._id.toString());
@@ -172,7 +195,7 @@ module.exports = () => {
             const update = { 
                 $pull: { 
                     friends : { friend: partyB },
-                    friendIds : partyB._id
+                    friendIds : partyB._id.toString()
                 }
             }
             return await UserModel.findOneAndUpdate(filter, update, { new: true });
