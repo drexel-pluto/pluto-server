@@ -320,7 +320,7 @@ module.exports = () => {
             const filter = { _id: params.user._id }
             const update = {
                 $push: {
-                    blockedUsers : params.userId,
+                    blockedUsers : params.friendId,
                 }
             }
             return await UserModel.findOneAndUpdate(filter, update, { new: true });

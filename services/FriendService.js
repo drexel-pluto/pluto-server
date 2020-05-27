@@ -195,7 +195,7 @@ module.exports = () => {
             const update = { 
                 $pull: { 
                     friends : { friend: partyB },
-                    friendIds : partyB._id.toString()
+                    friendIds : partyB.toString()
                 }
             }
             return await UserModel.findOneAndUpdate(filter, update, { new: true });

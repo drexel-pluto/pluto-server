@@ -124,7 +124,7 @@ router.post('/friends/block', authorizeUser, (req, res) => {
         try {
             const params = {
                 user: req.user,
-                userId: req.body.userId
+                friendId: req.body.friendId
             }
 
             await PlutoServices.US.blockUser(params);
