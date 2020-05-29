@@ -178,9 +178,10 @@ app.post('/api/login', localAuth, (req, res) => {
 const jwtStrategy = new JwtStrategy({
   secretOrKey: process.env.AUTH_SECRET,
   jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('Bearer')
-}, (payload, done) => {
-  // The following line accepts the JWT and sets `req.user = user`
-  done(null, payload.user);  // JWT is valid - sets `req.user = payload.user`
+}, async (payload, done) => {
+  // take the parsed JWT and get the fresh user info (make sure we have the latest data)
+  const freshUser = await US.getUser(payload.user.username);
+  done(null, freshUser);  // JWT is valid - sets `req.user = payload.user`
 });
 passport.use(jwtStrategy);
 

@@ -96,8 +96,7 @@ module.exports = () => {
             return await GS.updateGroupName(params);
         },
         async isGroupOwner(params) {
-            const freshUser = await US.getUser(params.user.username);
-            const ownedGroups = new Set(freshUser.groupIds);
+            const ownedGroups = new Set(params.user.groupIds);
             return ownedGroups.has(params.groupId.toString());
         },
         // Unused but example of async foreach

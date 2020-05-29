@@ -176,8 +176,7 @@ module.exports = () => {
         },
         async fetchAUser(params) {
             if (!isEmpty(params.userId)) {
-                const freshUser = await US.getUserById(params.user._id);
-                await FS.ensureFriends(freshUser, params.userId);
+                await FS.ensureFriends(params.user, params.userId);
                 const user = await US.getUserById(params.userId);
                 const bareUser = await US.getNonSensitiveUserInfo(user);
                 const usersPostsForRequester = await PS.fetchUsersPosts(params);

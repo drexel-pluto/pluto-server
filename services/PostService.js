@@ -66,9 +66,8 @@ module.exports = () => {
             return date.toISOString().substring(0, 10);
         },
         async ensureAudienceIsFriends(params) {
-            const freshUser = await US.getUserById(params.user._id);
             return await Promise.all(params.audienceIds.map(async (id) => {
-                await FS.ensureFriends(freshUser, id);
+                await FS.ensureFriends(params.user, id);
             }));
         },
         async addPostToCollectors(params) {
@@ -115,10 +114,8 @@ module.exports = () => {
         },
         async fetchPost(params) {
             await PS.ensurePostIsInCollector(params);
-            const freshUser = await US.getUserById(params.user._id);
-            params.user = freshUser;
             const post = await PostModel.findById(params.postId);
-            await FS.ensureFriends(freshUser, post.poster._id);
+            await FS.ensureFriends(params.user, post.poster._id);
             const preparedPost = await PS.getPostForDelivery(post, params);
             return preparedPost;
         },
@@ -128,16 +125,14 @@ module.exports = () => {
         },
         async fetchRawEnsuredPost(params) {
             await PS.ensurePostIsInCollector(params);
-            const freshUser = await US.getUserById(params.user._id);
             const post = await PostModel.findById(params.postId);
-            await FS.ensureFriends(freshUser, post.poster);
+            await FS.ensureFriends(params.user, post.poster);
             return post;
         },
         async ensurePostIsForUser(params) {
             await PS.ensurePostIsInCollector(params);
-            const freshUser = await US.getUserById(params.user._id);
             const post = await PostModel.findById(params.postId).lean();
-            await FS.ensureFriends(freshUser, post.poster);
+            await FS.ensureFriends(params.user, post.poster);
             return post;
         },
         async ensurePostOwner(postObj, userObj, _params) {
@@ -357,9 +352,8 @@ module.exports = () => {
         },
         // Will take either a username param or userId param
         async fetchUsersPosts(params) {
-            const freshUser = await US.getUserById(params.user._id);
             const friendId = (params.userId) ? params.userId : await US.getUsersId(params);
-            await FS.ensureFriends(freshUser, friendId);
+            await FS.ensureFriends(params.user, friendId);
 
             // Filter variables must be supplied in the params
             params.filterVars = [friendId];
@@ -388,6 +382,7 @@ module.exports = () => {
             return posts;
         },
         async getPostForDelivery(post, params) {
+
             post.comments = await CS.prepareSinglePostCommentSection(post, params);
             const sanitizedPost = await PS.sanitizePostInfo(post, params);
             const poster = await US.getPosterById(post.poster);
