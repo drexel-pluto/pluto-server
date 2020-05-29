@@ -140,21 +140,20 @@ module.exports = () => {
             return;
         },
         async ensureNotBlocked(params) {
-
             if (params.user.blockedUsers) {
-                const requestedUserBlocked = !params.user.blockedUsers.some(blockedUser =>
+                const requestedUserBlocked = params.user.blockedUsers.some(blockedUser =>
                     blockedUser.toString() == params.requestedUser._id.toString());
-                
-                if (requestedUserBlocked) {
+
+                    if (requestedUserBlocked) {
                     return Promise.reject('You have blocked this user.');
                 }
             }
 
             if (params.requestedUser.blockedUsers) {
-                const blockedByRequestedUser = !params.requestedUser.blockedUsers.some(blockedUser =>
+                const blockedByRequestedUser = params.requestedUser.blockedUsers.some(blockedUser =>
                     blockedUser.toString() == params.user._id.toString());
-                
-                if (blockedByRequestedUser) {
+
+                    if (blockedByRequestedUser) {
                     return Promise.reject('User has blocked you.');
                 }
             }
