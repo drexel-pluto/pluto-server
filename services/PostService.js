@@ -136,7 +136,7 @@ module.exports = () => {
             return post;
         },
         async ensurePostOwner(postObj, userObj, _params) {
-            if (postObj.poster != userObj._id) {
+            if (postObj.poster != userObj._id.toString()) {
                 return Promise.reject('You are not the author of this post.');
             }
             return;
